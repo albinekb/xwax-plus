@@ -37,8 +37,8 @@ EOF
 # Set some defaults and parse the command line
 
 PREFIX=
-ALSA=false
-JACK=false
+ALSA=true
+JACK=true
 OSS=false
 DEBUG=false
 PROFILE=false
