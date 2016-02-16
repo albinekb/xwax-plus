@@ -48,6 +48,8 @@ case $1 in
 		    img=$(basename "$i");dir=$(dirname "$i");
 			if [ -e "$dir/folder.jpg" ]; then
 				mv "$dir/folder.jpg" "$dir/folder.orig.jpg";
+			if [ -e "$dir/cover.jpg" ]; then
+				mv "$dir/cover.jpg" "$dir/folder.orig.jpg";
 			fi
 		    ffmpeg -i "$i" -vf scale=-1:250 "$dir/folder.jpg";
 		done
