@@ -29,6 +29,7 @@
 
 #include "excrate.h"
 #include "external.h"
+#include "index.h"
 
 #define CRATE_ALL "All records"
 
@@ -509,6 +510,7 @@ struct record* get_record(char *line)
         goto bad;
     }
 
+    x->status = RECORD_NOT_PLAYED;
     return x;
 
 bad:
