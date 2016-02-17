@@ -1432,7 +1432,8 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
     if (rcrates.w > LIBRARY_MIN_WIDTH) {
         draw_index(surface, rrecords, sel);
         draw_crates(surface, rcrates, sel);
-        draw_albumart(surface, &ralbumart, selector_current(sel)->pathname);
+        if (selector_current(sel) != NULL)
+            draw_albumart(surface, &ralbumart, selector_current(sel)->pathname);
     } else {
         draw_index(surface, *rect, sel);
     }
