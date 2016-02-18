@@ -147,17 +147,13 @@ static int record_cmp_artist(const struct record *a, const struct record *b)
 }
 
 /*
- * Standard comparison function between two records
+ * Standard comparison function between two records -> album
  */
 
 static int record_cmp_album(const struct record *a, const struct record *b)
 {
     int r;
-    if (a->album != NULL && b->album != NULL)
-    {
-        printf("a->album inst NULL!\n");
-    printf("a album: %s\n",a->album );
-    }
+    
     r = strcasecmp(a->album, b->album);
     if (r < 0)
         return -1;
@@ -177,6 +173,41 @@ static int record_cmp_album(const struct record *a, const struct record *b)
         return 1;
 
     return record_cmp_artist(a, b);
+}
+
+/*
+ * Standard comparison function between two records -> genre
+ */
+
+static int record_cmp_genre(const struct record *a, const struct record *b)
+{
+    int r;
+    
+    r = strcasecmp(a->genre, b->genre);
+    if (r < 0)
+        return -1;
+    else if (r > 0)
+        return 1;
+
+    r = strcasecmp(a->album, b->album);
+    if (r < 0)
+        return -1;
+    else if (r > 0)
+        return 1;
+
+    r = strcasecmp(a->artist, b->artist);
+    if (r < 0)
+        return -1;
+    else if (r > 0)
+        return 1;
+
+    r = strcasecmp(a->title, b->title);
+    if (r < 0)
+        return -1;
+    else if (r > 0)
+        return 1;
+
+    return record_cmp_album(a, b);
 }
 
 /*
@@ -209,6 +240,8 @@ static bool record_match_word(struct record *re, const char *match)
     if (strcasestr(re->title, match) != NULL)
         return true;
     if (strcasestr(re->album, match) != NULL)
+        return true;
+    if (strcasestr(re->genre, match) != NULL)
         return true;
     return false;
 }
@@ -361,6 +394,9 @@ static size_t bin_search(struct record **base, size_t n,
         break;
     case SORT_BPM:
         r = record_cmp_bpm(item, x);
+        break;
+    case SORT_GENRE:
+        r = record_cmp_genre(item, x);
         break;
     case SORT_PLAYLIST:
     default:
