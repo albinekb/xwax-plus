@@ -167,7 +167,9 @@ static SDL_Color background_col = {0, 0, 0, 255},
     detail_col = {128, 128, 128, 255},
     needle_col = {255, 255, 255, 255},
     artist_col = {16, 64, 0, 255},
-    bpm_col = {64, 16, 0, 255};
+    album_col = {16, 16, 128, 255},
+    genre_col = {64, 0, 0, 255};
+    bpm_col = {64, 16, 64, 255};
 
 static unsigned short *spinner_angle, spinner_size;
 
@@ -1300,6 +1302,10 @@ static void draw_crate_row(const void *context,
     switch (selector->sort) {
     case SORT_ARTIST:
         draw_token(surface, &right, "ART", text_col, artist_col, selected_col);
+        break;
+
+    case SORT_ALBUM:
+        draw_token(surface, &right, "ALB", text_col, album_col, selected_col);
         break;
 
     case SORT_BPM:
