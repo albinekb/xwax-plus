@@ -49,6 +49,7 @@ int deck_init(struct deck *d, struct rt *rt,
               double speed, bool phono, bool protect)
 {
     unsigned int rate;
+    struct timecode_def *timecode2 = NULL;
 
     if (rt_add_device(rt, &d->device) == -1)
         return -1;
@@ -61,8 +62,18 @@ int deck_init(struct deck *d, struct rt *rt,
     d->importer = importer;
     rate = device_sample_rate(&d->device);
     assert(timecode != NULL);
-    timecoder_init(&d->timecoder, timecode, speed, rate, phono);
-    player_init(&d->player, rate, track_acquire_empty(), &d->timecoder);
+
+    // cant directly pass the string, need to use a buffer (why?)
+    char *serato_2a = "serato_2a";
+    bool flipMode = strcmp(timecode->name, serato_2a) == 0;
+
+    if (flipMode)
+    {
+        printf("Using Serato. loading LUT for side B.\n");
+        timecode2 = timecoder_find_definition("serato_2b");
+    }
+    timecoder_init(&d->timecoder, timecode, timecode2,speed, rate, phono);
+    player_init(&d->player,&d, rate, track_acquire_empty(), &d->timecoder);
     cues_reset(&d->cues);
 
     /* The timecoder and player are driven by requests from

@@ -22,6 +22,8 @@
 
 #include <stdbool.h>
 
+ 
+
 #include "lut.h"
 #include "pitch.h"
 
@@ -51,7 +53,16 @@ struct timecoder_channel {
 
 struct timecoder {
     struct timecode_def *def;
+    struct timecode_def *def2;
+    struct timecode_def *temp;
     double speed;
+
+    /* Track Select Stuff */
+    int check_scroll_marker;
+    bool trackSelectMode;
+    unsigned int lost_counter;
+    bool sideA;
+    bool sniff_flip;
 
     /* Precomputed values */
 
@@ -82,7 +93,7 @@ struct timecode_def* timecoder_find_definition(const char *name);
 void timecoder_free_lookup(void);
 
 void timecoder_init(struct timecoder *tc, struct timecode_def *def,
-                    double speed, unsigned int sample_rate, bool phono);
+                    struct timecode_def *def2, double speed, unsigned int sample_rate, bool phono);
 void timecoder_clear(struct timecoder *tc);
 
 int timecoder_monitor_init(struct timecoder *tc, int size);

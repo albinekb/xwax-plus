@@ -24,8 +24,12 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <SDL.h>
+#include <SDL_ttf.h>
+
 #include "debug.h"
 #include "timecoder.h"
+#include "selector.h"
 
 #define ZERO_THRESHOLD (128 << 16)
 
@@ -280,14 +284,27 @@ static void init_channel(struct timecoder_channel *ch)
  */
 
 void timecoder_init(struct timecoder *tc, struct timecode_def *def,
-                    double speed, unsigned int sample_rate, bool phono)
+                    struct timecode_def *def2,double speed, unsigned int sample_rate, bool phono)
 {
     assert(def != NULL);
 
     /* A definition contains a lookup table which can be shared
      * across multiple timecoders */
-
     assert(def->lookup);
+
+    // ADDED STUFF FOR VINYL FLIP
+    char *serato_2b = "serato_2b";
+    bool flipMode = strcmp(def2->name, serato_2b) == 0;
+    if(flipMode){
+        printf("loading second definition!\n");
+        assert(def2->lookup);
+        tc->def2 = def2;
+    }
+
+    tc->sniff_flip = false;
+    tc->lost_counter = 0;
+    // TO HERE.
+
     tc->def = def;
     tc->speed = speed;
 
@@ -307,6 +324,9 @@ void timecoder_init(struct timecoder *tc, struct timecode_def *def,
     tc->timecode = 0;
     tc->valid_counter = 0;
     tc->timecode_ticker = 0;
+
+    // TEST
+    tc->check_scroll_marker = 0;
 
     tc->mon = NULL;
 }
@@ -415,6 +435,42 @@ static void update_monitor(struct timecoder *tc, signed int x, signed int y)
     tc->mon[py * size + px] = 0xff; /* white */
 }
 
+// TEST Function to scroll through library via 'lead out' track rubbing
+
+/*
+int check_scroll(struct timecoder *tc){
+    int success = 0;
+    
+//    tc->check_scroll_interval++;
+
+    int timeCode =  lut_lookup(&tc->def->lut, tc->bitstream);
+    if(tc->check_scroll_marker = 600 ){
+        tc->check_scroll_interval= 0;
+        double when;
+
+        SDL_Event scrollEvent;
+        scrollEvent.type = SDL_KEYDOWN;
+        scrollEvent.key.keysym.sym = SDLK_DOWN;
+
+
+        //timeCode = timecoder_get_position(tc,&when);
+        if (  timeCode != -1 && timeCode >  tc->def->length && timeCode + 15000 > tc->def->safe ){
+
+            printf("deck is in vinyl scroll mode!\n");
+            if(!tc->forwards){
+                    scrollEvent.type = SDL_KEYUP;
+                    scrollEvent.key.keysym.sym = SDLK_UP;
+            }
+            printf("Pushing Event...\n");
+            SDL_PushEvent(&scrollEvent);
+            printf("Pushing Event... DONE\n"); 
+            success = 1;
+        }          
+    }
+    return success;
+}
+*/
+
 /*
  * Extract the bitstream from the sample value
  */
@@ -432,25 +488,67 @@ static void process_bitstream(struct timecoder *tc, signed int m)
      * the vinyl, regardless of the direction. */
 
     if (tc->forwards) {
-	tc->timecode = fwd(tc->timecode, tc->def);
-	tc->bitstream = (tc->bitstream >> 1)
-	    + (b << (tc->def->bits - 1));
+    	tc->timecode = fwd(tc->timecode, tc->def);
+    	tc->bitstream = (tc->bitstream >> 1)
+    	    + (b << (tc->def->bits - 1));
 
     } else {
-	bits_t mask;
+    	bits_t mask;
 
-	mask = ((1 << tc->def->bits) - 1);
-	tc->timecode = rev(tc->timecode, tc->def);
-	tc->bitstream = ((tc->bitstream << 1) & mask) + b;
+    	mask = ((1 << tc->def->bits) - 1);
+    	tc->timecode = rev(tc->timecode, tc->def);
+    	tc->bitstream = ((tc->bitstream << 1) & mask) + b;
     }
 
-    if (tc->timecode == tc->bitstream)
-	tc->valid_counter++;
+    if (tc->timecode == tc->bitstream){
+    	tc->valid_counter++;
+
+       
+        tc->lost_counter = 0;
+        //printf("Im not lost.\n");
+       /* if (tc->sniff_flip == true && tc->valid_counter > 30){
+            // looks like changing definitions helped.
+            tc->sniff_flip = false;
+            printf("Vinyl flipped!\n");
+            SDL_Event scrollEvent;
+            scrollEvent.type = SDL_KEYDOWN;
+            scrollEvent.key.keysym.sym = SDLK_DOWN;
+            SDL_PushEvent(&scrollEvent);
+
+        }*/
+    }
+
     else {
-	tc->timecode = tc->bitstream;
-	tc->valid_counter = 0;
-    }
+        // We didnt get what we were expecting.
+        //printf("were lost.\n");
+        tc->timecode = tc->bitstream;
+        tc->valid_counter = 0;
+        tc->lost_counter++;
 
+    // TODO: Check if record was flipped. 
+    //       If 2nd LUT gives better results.
+
+    // switching definitions (sides)
+     /*   if (tc->lost_counter > 8)
+        {
+            // This part of the code is set up for externally amped signals!
+            // Using software preamp were lost for longer periods of time (more errors).
+            // possibly this leads to unwanted behaviour of this code when using without amped signals.
+
+            // weve been lost for 8 frames now. switch definitions.
+            printf("Switching definitions...\n");
+            tc->temp = tc->def;
+            tc->def = tc->def2;
+            tc->def2 = tc->temp;
+
+            // entering sniff flip mode, or exiting if switching timecode definitions
+            // still gives us an error streak
+
+            tc->sniff_flip = !tc->sniff_flip;
+            printf("Switching definitions... DONE.\n");
+        }*/
+    
+    }
     /* Take note of the last time we read a valid timecode */
 
     tc->timecode_ticker = 0;
@@ -585,8 +683,9 @@ void timecoder_submit(struct timecoder *tc, signed short *pcm, size_t npcm)
             secondary = left;
         }
 
-	process_sample(tc, primary, secondary);
+	    process_sample(tc, primary, secondary);
         update_monitor(tc, left, right);
+        //check_scroll(tc);
 
         pcm += TIMECODER_CHANNELS;
     }
