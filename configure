@@ -40,7 +40,7 @@ PREFIX=
 ALSA=true
 JACK=true
 OSS=false
-DEBUG=true
+DEBUG=false
 PROFILE=false
 
 while [ $# -ge 1 ]; do
