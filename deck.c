@@ -116,6 +116,7 @@ void deck_load(struct deck *d, struct record *record)
         return;
 
     d->record = record;
+    record->status = RECORD_LOADED;
     player_set_track(&d->player, t); /* passes reference */
 }
 

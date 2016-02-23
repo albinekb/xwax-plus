@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+#
+# An xwax-albumart converter script
+
+# able to parse folders and files
+#
+# By: Kenneth Allan
+#
+
+import sys,os,re
+sys.path.append( "/home/tux/PyLib" )
+import optionparse
+from shutil import copyfile
+from wichtig import *
+
+befehl = sys.argv[0]
+usage = """
+Call: %s
+Usage:	 
+    An xwax-albumart converter script
+
+    Options:
+        -help  : Displays this
+        -debug : View Debug Output (use this if you experience any weird
+         behaviour)
+""" % befehl
+
+abb = '%(befehl)s: ABBRUCH '%locals()
+warnung = '%(befehl)s: WARNUNG: '%locals()
+
+opts, args = optionparse.parse( usage )
+
+if opts.help: # or len(args) != 0:
+    print usage
+    sys.exit(1)
+
+def search_subdirs(dir):
+    for root, dirs, files in os.walk(dir):
+        imglist = [0]
+        for f in files:
+            if (f.endswith('.jpg') or f.endswith('.JPG') or f.endswith('.Jpg')):
+                imglist.append(f)
+        print 'In Folder: %(root)s\n # | File '%locals()
+        print('\n'.join('{}:  {}'.format(*k) for k in enumerate(imglist)))
+        #for img in imglist:
+        if (len(imglist)>1):
+            inp = -1
+            while ( ( int(inp) < 0 ) or ( int(inp) > len(imglist)) ):
+                inp =  raw_input('Which Image would you like to use ? (0 = None)')
+            if (int(inp) == 0): continue
+            img = imglist[int(inp)]
+            folder = os.path.dirname(img)
+            img_path = os.path.join(root,img)
+            bu_path = os.path.join(folder,'folder.orig.jpg')
+            copyfile(img_path, bu_path )
+            command = ['ffmpeg','-y','-i',img_path,'-vf','scale=250:250', os.path.join(root + '/folder.jpg')]
+            kommando2(command)
+        #break
+        for d in dirs:
+            search_subdirs(d)
+
+for arg in args:
+    if not os.path.isdir(arg):
+        break
+    else:
+        if not(os.path.exists( arg + "folder.orig.jpg" )):
+            search_subdirs(arg)    
