@@ -32,6 +32,7 @@ struct player {
 
     spin lock;
     struct track *track;
+    struct deck *deck;
 
     /* Current playback parameters */
 
@@ -50,7 +51,7 @@ struct player {
         recalibrate; /* re-sync offset at next opportunity */
 };
 
-void player_init(struct player *pl, unsigned int sample_rate,
+void player_init(struct player *pl,struct deck *deck, unsigned int sample_rate,
                  struct track *track, struct timecoder *timecoder);
 void player_clear(struct player *pl);
 

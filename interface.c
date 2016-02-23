@@ -121,6 +121,7 @@
 #define FUNC_LOAD 0
 #define FUNC_RECUE 1
 #define FUNC_TIMECODE 2
+#define FUNC_VINYLFLIP 3
 
 /* Types of SDL_USEREVENT */
 
@@ -1001,7 +1002,7 @@ static void draw_deck_top(SDL_Surface *surface, const struct rect *rect,
 
 static void draw_deck_status(SDL_Surface *surface,
                              const struct rect *rect,
-                             const struct deck *deck)
+                             const struct deck *deck, int deckID)
 {
     char buf[128], *c;
     int tc;
@@ -1012,6 +1013,28 @@ static void draw_deck_status(SDL_Surface *surface,
     c += sprintf(c, "%s: ", pl->timecoder->def->name);
 
     tc = timecoder_get_position(pl->timecoder, NULL);
+
+
+
+    // TEST If we just came from trackselection mode in the play area
+
+    if(tc < pl->timecoder->def->safe-150000 && pl->timecoder->trackSelectMode == true ){
+        pl->timecoder->trackSelectMode = false;
+        //printf("here well select a track on deck %d.\n",deckID);
+        SDL_Event loadNPlay;
+        loadNPlay.type = SDL_KEYDOWN;
+        loadNPlay.key.keysym.sym = SDLK_F1;
+        if (deckID == 1){
+            loadNPlay.key.keysym.sym = SDLK_F5;
+        }
+
+        SDL_PushEvent(&loadNPlay);
+    }else{
+        check_scroll(pl,tc);
+        check_flip(pl->timecoder,tc,deckID);
+    }
+
+
     if (pl->timecode_control && tc != -1) {
         c += sprintf(c, "%7d ", tc);
     } else {
@@ -1030,11 +1053,12 @@ static void draw_deck_status(SDL_Surface *surface,
 }
 
 /*
- * Draw a single deck
+ * Draw a single deck 
+ * TEST: Added Deck ID for reference
  */
 
 static void draw_deck(SDL_Surface *surface, const struct rect *rect,
-                      struct deck *deck, int meter_scale)
+                      struct deck *deck, int meter_scale, int deckID)
 {
     int position;
     struct rect track, top, meters, status, rest, lower;
@@ -1070,7 +1094,7 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
     if (meters.h < 64)
         meters = lower;
     else
-        draw_deck_status(surface, &status, deck);
+        draw_deck_status(surface, &status, deck, deckID);
 
     draw_meters(surface, &meters, t, position, meter_scale);
 }
@@ -1089,7 +1113,7 @@ static void draw_decks(SDL_Surface *surface, const struct rect *rect,
 
     for (d = 0; d < ndecks; d++) {
         split(right, columns(d, ndecks, BORDER), &left, &right);
-        draw_deck(surface, &left, &deck[d], meter_scale);
+        draw_deck(surface, &left, &deck[d], meter_scale, d);
     }
 }
 
@@ -1601,6 +1625,12 @@ static bool handle_key(SDLKey key, SDLMod mod)
                     (void)player_toggle_timecode_control(pl);
                 }
                 break;
+            case FUNC_VINYLFLIP:
+                selector_down(sel);
+                re = selector_current(sel);
+                if (re != NULL)
+                    deck_load(de, re);
+                break;
             }
         }
     }
@@ -1664,6 +1694,103 @@ static void defer_selector_redraw(struct observer *o, void *x)
     push_event(EVENT_SELECTOR);
 }
 
+
+
+int check_flip(struct timecoder *tc, int timeCode, int deckID){
+
+    
+    if ( timeCode != -1 ){
+        if (tc->sniff_flip)
+        {
+            printf("were possibly on the other side now. waiting for valid sample amount to confirm\n");
+        }
+        tc->lost_counter = 0;
+        printf("Im not lost.\n");
+        if (tc->sniff_flip == true && tc->valid_counter > 20){
+            // looks like changing definitions helped.
+            tc->sniff_flip = false;
+            printf("Vinyl flipped!\n");
+         
+            printf("sending load event...\n");
+            SDL_Event loadEvent;
+            loadEvent.type = SDL_KEYDOWN;
+            loadEvent.key.keysym.sym = SDLK_F4;
+            if (deckID == 1){
+                loadEvent.key.keysym.sym = SDLK_F8;
+            }
+
+            SDL_PushEvent(&loadEvent);
+            printf("sending load event...DONE\n");   
+        }
+    }else{
+        tc->lost_counter++;
+
+    // TODO: Check if record was flipped. 
+    //       If 2nd LUT gives better results.
+
+    // switching definitions (sides)
+        if (tc->lost_counter > 20)
+        {
+            // This part of the code is set up for externally amped signals!
+            // Using software preamp were lost for longer periods of time (more errors).
+            // possibly this leads to unwanted behaviour of this code when using without amped signals.
+
+            // weve been lost for 25 frames now. switch definitions.
+            printf("Switching definitions...\n");
+            tc->temp = tc->def;
+            tc->def = tc->def2;
+            tc->def2 = tc->temp;
+
+            // entering sniff flip mode, or exiting if switching timecode definitions
+            // still gives us an error streak
+
+            tc->sniff_flip = !tc->sniff_flip;
+            printf("Switching definitions... DONE.\n");
+        }
+    }
+
+}
+
+
+int check_scroll(struct player *pl, int timeCode){
+    int success = 0;
+    
+    if( ( timeCode == -1 && pl->timecoder->trackSelectMode == true ) || (timeCode + 150000 > pl->timecoder->def->safe && timeCode < pl->timecoder->def->safe )){
+        bool crateScroll = timeCode + 75000 > pl->timecoder->def->safe;
+        pl->timecoder->trackSelectMode = true;
+        printf("\nTrack Selection!\n");
+
+        SDL_Event scrollEvent;
+        scrollEvent.type = SDL_KEYDOWN;
+        scrollEvent.key.keysym.sym = SDLK_DOWN;
+
+        if (crateScroll){                
+            scrollEvent.key.keysym.sym = SDLK_RIGHT;
+        }
+
+        if(!pl->timecoder->forwards){
+            //printf("were goin backwards!\n");
+            scrollEvent.key.keysym.sym = SDLK_UP;
+            if (crateScroll){                
+                scrollEvent.key.keysym.sym = SDLK_LEFT;
+            }
+        }
+        int rps = timecoder_revs_per_sec(pl->timecoder);
+        int rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
+
+        int difference = fabs(pl->timecoder->check_scroll_marker - rangle);
+        printf("marker: %d\nrangle: %d\ndiff: %d\n", pl->timecoder->check_scroll_marker, rangle, difference );
+        if (  difference > 40 ){
+            pl->timecoder->check_scroll_marker = timeCode;
+
+            SDL_PushEvent(&scrollEvent);
+          //  printf("Successfully scrolled..\n"); 
+            success = 1;
+        }                        
+    }
+    return success;
+}
+
 /*
  * The SDL interface thread
  */
@@ -1692,7 +1819,13 @@ static int interface_main(void)
 
     rig_lock();
 
+    // int check_scrollInterval = 0;
     for (;;) {
+
+        // check_scrollInterval++;
+        // if(check_scrollInterval == 500)
+        //    check_scrollInterval = 0;
+        //   checkVinylScroll();
 
         rig_unlock();
 
@@ -1796,7 +1929,6 @@ static int interface_main(void)
             UPDATE(surface, &rplayers);
             decks_update = false;
         }
-
     } /* main loop */
 
  finish:

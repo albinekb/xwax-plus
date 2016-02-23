@@ -25,6 +25,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <SDL.h>
+#include <SDL_events.h>
+#include <SDL_ttf.h>
+
 #include "device.h"
 #include "player.h"
 #include "track.h"
@@ -189,7 +193,7 @@ void player_set_timecoder(struct player *pl, struct timecoder *tc)
  * Post: player is initialised
  */
 
-void player_init(struct player *pl, unsigned int sample_rate,
+void player_init(struct player *pl,struct deck *deck, unsigned int sample_rate,
                  struct track *track, struct timecoder *tc)
 {
     assert(track != NULL);
@@ -209,6 +213,8 @@ void player_init(struct player *pl, unsigned int sample_rate,
     pl->pitch = 0.0;
     pl->sync_pitch = 1.0;
     pl->volume = 0.0;
+
+    pl->deck = deck;
 }
 
 /*
@@ -329,6 +335,43 @@ void player_clone(struct player *pl, const struct player *from)
     track_release(x);
 }
 
+
+
+/*  THE PROPER check_scroll FUNCTION!!!
+
+
+int check_scroll(struct timecoder *tc, int timeCode){
+    int success = 0;
+    printf("checkin if were scrollin!\n");
+    
+    if( timeCode != -1 && timeCode + 100000 > tc->def->safe && timeCode < tc->def->safe){
+
+        printf("checkin if were scrollin!-----WERE IN\n");
+        tc->trackSelectMode = true;
+        SDL_Event scrollEvent;
+        scrollEvent.type = SDL_KEYDOWN;
+        scrollEvent.key.keysym.sym = SDLK_DOWN;
+
+        if(!tc->forwards){
+            printf("were goin backwards!\n");
+            scrollEvent.type = SDL_KEYDOWN;
+            scrollEvent.key.keysym.sym = SDLK_UP;
+        }
+        //timeCode = timecoder_get_position(tc,&when);
+        int difference = fabs(tc->check_scroll_marker - timeCode);
+        printf("diff: %d\n",difference );
+        if (  difference > 150 ){
+            tc->check_scroll_marker = timeCode;
+
+            SDL_PushEvent(&scrollEvent);
+            printf("Successfully scrolled..\n"); 
+            success = 1;
+        }          
+    }
+    return success;
+}
+*/
+
 /*
  * Synchronise to the position and speed given by the timecoder
  *
@@ -342,6 +385,8 @@ static int sync_to_timecode(struct player *pl)
 
     timecode = timecoder_get_position(pl->timecoder, &when);
 
+    
+
     /* Instruct the caller to disconnect the timecoder if the needle
      * is outside the 'safe' zone of the record */
 
@@ -351,6 +396,8 @@ static int sync_to_timecode(struct player *pl)
     /* If the timecoder is alive, use the pitch from the sine wave */
 
     pl->pitch = timecoder_get_pitch(pl->timecoder);
+
+    //check_scroll(pl->timecoder,timecode);
 
     /* If we can read an absolute time from the timecode, then use it */
 
