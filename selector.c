@@ -282,7 +282,7 @@ void selector_clear(struct selector *sel)
 void selector_set_lines(struct selector *sel, unsigned int lines)
 {
     assert(lines > 0);
-    listbox_set_lines(&sel->crates, lines);
+    listbox_set_lines(&sel->crates, ( lines / 2 ) - 2 );
     listbox_set_lines(&sel->records, lines);
 }
 
