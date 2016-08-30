@@ -300,7 +300,7 @@ void timecoder_init(struct timecoder *tc, struct timecode_def *def,
         assert(def2->lookup);
         tc->def2 = def2;
     }
-
+    tc->sideA = true;
     tc->sniff_flip = false;
     tc->lost_counter = 0;
     // TO HERE.
@@ -503,8 +503,12 @@ static void process_bitstream(struct timecoder *tc, signed int m)
     if (tc->timecode == tc->bitstream){
     	tc->valid_counter++;
 
-       
+        //printf("valid counter: %d\n", tc->valid_counter);
+        if (tc->valid_counter > 13)
+        {
+            /* code */
         tc->lost_counter = 0;
+        }
         //printf("Im not lost.\n");
        /* if (tc->sniff_flip == true && tc->valid_counter > 30){
             // looks like changing definitions helped.
