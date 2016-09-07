@@ -1623,9 +1623,9 @@ int check_flip(struct timecoder *tc, int timeCode, int deckID){
     //       If 2nd LUT gives better results.
 
     // switching definitions (sides)
-        if (tc->lost_counter > 170)
+        if (tc->lost_counter > 130)
         {
-       // tc->lost_counter = 0;
+        tc->lost_counter = 0;
         //printf("sniffing: %s\n", tc->sniff_flip ? "true" : "false");
             // This part of the code is set up for externally amped signals!
             // Using software preamp were lost for longer periods of time (more errors).
