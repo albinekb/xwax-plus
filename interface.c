@@ -1002,7 +1002,7 @@ static void draw_deck_top(SDL_Surface *surface, const struct rect *rect,
 
 static void draw_deck_status(SDL_Surface *surface,
                              const struct rect *rect,
-                             const struct deck *deck, int deckID)
+                             struct deck *deck, int deckID)
 {
     char buf[128], *c;
     int tc;
@@ -1032,7 +1032,16 @@ static void draw_deck_status(SDL_Surface *surface,
     }else{
        // printf("timecode: %d\n", tc);
         check_scroll(pl,tc);
-        check_flip(pl->timecoder,tc,deckID);
+        if (check_flip(pl->timecoder,tc,deckID) == 1)
+        {
+            printf("it was one\n");
+            if (pl->timecoder->sideA)
+            {
+                deck->player.offset = 24;
+            }else{
+                deck->player.offset = 8;
+            }
+        }
     }
 
 
@@ -1710,6 +1719,7 @@ int check_flip(struct timecoder *tc, int timeCode, int deckID){
         if (tc->sniff_flip == true && tc->valid_counter > 25){
             // looks like changing definitions helped.
             tc->sniff_flip = false;
+            tc->sideA = !tc->sideA;
             printf("Vinyl flipped!\n");
          
             //printf("sending load event...\n");
@@ -1721,6 +1731,7 @@ int check_flip(struct timecoder *tc, int timeCode, int deckID){
             }
 
             SDL_PushEvent(&loadEvent);
+            return 1;
             //printf("sending load event...DONE\n");   
         }
     }else{
@@ -1752,6 +1763,7 @@ int check_flip(struct timecoder *tc, int timeCode, int deckID){
             tc->sniff_flip = !tc->sniff_flip;
             printf("Switching definitions... DONE.\n");
         }
+        return 0;
     }
 
 }
