@@ -506,20 +506,8 @@ static void process_bitstream(struct timecoder *tc, signed int m)
         //printf("valid counter: %d\n", tc->valid_counter);
         if (tc->valid_counter > 13)
         {
-            /* code */
-        tc->lost_counter = 0;
+            tc->lost_counter = 0;
         }
-        //printf("Im not lost.\n");
-       /* if (tc->sniff_flip == true && tc->valid_counter > 30){
-            // looks like changing definitions helped.
-            tc->sniff_flip = false;
-            printf("Vinyl flipped!\n");
-            SDL_Event scrollEvent;
-            scrollEvent.type = SDL_KEYDOWN;
-            scrollEvent.key.keysym.sym = SDLK_DOWN;
-            SDL_PushEvent(&scrollEvent);
-
-        }*/
     }
 
     else {
@@ -527,31 +515,7 @@ static void process_bitstream(struct timecoder *tc, signed int m)
         //printf("were lost.\n");
         tc->timecode = tc->bitstream;
         tc->valid_counter = 0;
-        tc->lost_counter++;
-
-    // TODO: Check if record was flipped. 
-    //       If 2nd LUT gives better results.
-
-    // switching definitions (sides)
-     /*   if (tc->lost_counter > 8)
-        {
-            // This part of the code is set up for externally amped signals!
-            // Using software preamp were lost for longer periods of time (more errors).
-            // possibly this leads to unwanted behaviour of this code when using without amped signals.
-
-            // weve been lost for 8 frames now. switch definitions.
-            printf("Switching definitions...\n");
-            tc->temp = tc->def;
-            tc->def = tc->def2;
-            tc->def2 = tc->temp;
-
-            // entering sniff flip mode, or exiting if switching timecode definitions
-            // still gives us an error streak
-
-            tc->sniff_flip = !tc->sniff_flip;
-            printf("Switching definitions... DONE.\n");
-        }*/
-    
+        tc->lost_counter++;    
     }
     /* Take note of the last time we read a valid timecode */
 
