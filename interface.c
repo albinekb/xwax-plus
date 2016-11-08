@@ -715,7 +715,7 @@ static void draw_spinner(SDL_Surface *surface, const struct rect *rect,
     remain = player_get_remain(pl);
 
     rps = timecoder_revs_per_sec(pl->timecoder);
-    rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
+    rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;       
 
     if (elapsed < 0 || remain < 0)
         col = alert_col;
@@ -1333,9 +1333,20 @@ static void draw_crate_row(const void *context,
         col = detail_col;
     else
         col = text_col;
+    char* crateName = crate->name;
+    int len = strlen(crateName);
+    if (endsWith(crateName, ".xwaxpls"))
+    {
+        crateName[len-8] = 0;
+    }
+    if (endsWith(crateName, ".m3u"))
+    {
+        crateName[len-4] = 0;
+    }
+
 
     if (!selected) {
-        draw_text(surface, &rect, crate->name, font, col, background_col);
+        draw_text(surface, &rect, crateName, font, col, background_col);
         return;
     }
 
@@ -1372,7 +1383,7 @@ static void draw_crate_row(const void *context,
                    dim(alert_col, 2), selected_col);
     }
 
-    draw_text(surface, &left, crate->name, font, col, selected_col);
+    draw_text(surface, &left, crateName, font, col, selected_col);
 }
 
 /*
@@ -1716,7 +1727,7 @@ int check_flip(struct timecoder *tc, int timeCode, int deckID){
         }
         //tc->lost_counter = 0;
 //        printf("Im not lost.\n");
-        if (tc->sniff_flip == true && tc->valid_counter > 25){
+        if (tc->sniff_flip == true && tc->valid_counter > 65){
             // looks like changing definitions helped.
             tc->sniff_flip = false;
             tc->sideA = !tc->sideA;
@@ -1794,9 +1805,10 @@ int check_scroll(struct player *pl, int timeCode){
         }
         int rps = timecoder_revs_per_sec(pl->timecoder);
         int rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
+        //int pangle = spinner_angle[spinner_size/2 * spinner_size/2 + 1];
 
         int difference = fabs(pl->timecoder->check_scroll_marker - rangle);
-        printf("marker: %d\nrangle: %d\ndiff: %d\n", pl->timecoder->check_scroll_marker, rangle, difference );
+       // printf("rps: %d\nmarker: %d\nrangle: %d\ndiff: %d\n", rps, pl->timecoder->check_scroll_marker, rangle+pangle, difference );
         if (  difference > 40 ){
             pl->timecoder->check_scroll_marker = timeCode;
 
@@ -2125,4 +2137,15 @@ void interface_stop(void)
 
     TTF_Quit();
     SDL_Quit();
+}
+
+int endsWith(const char *str, const char *suffix)
+{
+    if (!str || !suffix)
+        return 0;
+    size_t lenstr = strlen(str);
+    size_t lensuffix = strlen(suffix);
+    if (lensuffix >  lenstr)
+        return 0;
+    return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
