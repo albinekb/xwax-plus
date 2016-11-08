@@ -1731,6 +1731,7 @@ int check_flip(struct timecoder *tc, int timeCode, int deckID){
             // looks like changing definitions helped.
             tc->sniff_flip = false;
             tc->sideA = !tc->sideA;
+
             printf("Vinyl flipped!\n");
          
             //printf("sending load event...\n");
@@ -1743,6 +1744,7 @@ int check_flip(struct timecoder *tc, int timeCode, int deckID){
 
             SDL_PushEvent(&loadEvent);
             return 1;
+
             //printf("sending load event...DONE\n");   
         }
     }else{
@@ -1809,6 +1811,7 @@ int check_scroll(struct player *pl, int timeCode){
 
         int difference = fabs(pl->timecoder->check_scroll_marker - rangle);
        // printf("rps: %d\nmarker: %d\nrangle: %d\ndiff: %d\n", rps, pl->timecoder->check_scroll_marker, rangle+pangle, difference );
+
         if (  difference > 40 ){
             pl->timecoder->check_scroll_marker = timeCode;
 
