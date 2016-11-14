@@ -25,6 +25,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <SDL.h>
+#include <SDL_events.h>
+#include <SDL_ttf.h>
+
 #include "device.h"
 #include "player.h"
 #include "track.h"
@@ -189,7 +193,7 @@ void player_set_timecoder(struct player *pl, struct timecoder *tc)
  * Post: player is initialised
  */
 
-void player_init(struct player *pl, unsigned int sample_rate,
+void player_init(struct player *pl,struct deck *deck, unsigned int sample_rate,
                  struct track *track, struct timecoder *tc)
 {
     assert(track != NULL);
@@ -209,6 +213,8 @@ void player_init(struct player *pl, unsigned int sample_rate,
     pl->pitch = 0.0;
     pl->sync_pitch = 1.0;
     pl->volume = 0.0;
+
+    pl->deck = deck;
 }
 
 /*
@@ -341,6 +347,8 @@ static int sync_to_timecode(struct player *pl)
     signed int timecode;
 
     timecode = timecoder_get_position(pl->timecoder, &when);
+
+    
 
     /* Instruct the caller to disconnect the timecoder if the needle
      * is outside the 'safe' zone of the record */
