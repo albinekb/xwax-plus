@@ -28,7 +28,7 @@
 #define SORT_END      3
 
 struct record {
-    char *pathname, *artist, *title;
+    char *pathname, *artist, *title, *album, *genre; /*Kenny: Added album and genre */
     double bpm; /* or 0.0 if not known */
 };
 
