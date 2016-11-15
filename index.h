@@ -30,13 +30,14 @@
 /* A single music track in our listings */
 
 struct record {
-    char *pathname, *artist, *title; /* a single malloc */
+
 
     /* An optional extra string may be used to match against search
      * input; allows us to handle locale but still type in ASCII */
 
     char *match; /* or NULL */
 
+    char *pathname, *artist, *title, *album, *genre; /*Kenny: Added album and genre */
     double bpm; /* or 0.0 if not known */
 };
 
