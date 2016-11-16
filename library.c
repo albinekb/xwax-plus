@@ -546,6 +546,26 @@ struct record* get_record(char *line)
     n = split(line, field, ARRAY_SIZE(field));
 
     switch (n) {
+    case 6:
+        // By Kenny: Added a new case for more detailed information
+        x->genre = field[4];
+
+    case 5:
+        // By Kenny: Added a new case for more detailed information
+        x->pathname = field[0];
+        x->artist = field[1];
+        x->title = field[2];
+        x->album = field[3];
+        x->genre = field[4];
+
+        x->bpm = parse_bpm(field[5]);
+        if (!isfinite(x->bpm)) {
+            fprintf(stderr, "%s: Ignoring malformed BPM '%s'\n",
+                    field[0], field[3]);
+            x->bpm = 0.0;
+        }
+        break;
+
     case 4:
         x->bpm = parse_bpm(field[3]);
         if (!isfinite(x->bpm)) {
