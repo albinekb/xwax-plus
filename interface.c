@@ -100,7 +100,7 @@
 
 #define BPM_WIDTH 32
 #define SORT_WIDTH 21
-#define RESULTS_ARTIST_WIDTH 200
+#define RESULTS_ARTIST_WIDTH 190
 
 #define TOKEN_SPACE 2
 
@@ -1345,6 +1345,16 @@ static void draw_record_row(const void *context,
     split(right, from_left(SPACER, 0), &left, &right);
     draw_rect(surface, &left, col);
     draw_text_in_locale(surface, &right, record->title, font, text_col, col);
+
+
+    // Kenny ADDED:
+    split(right, from_left(width, 0), &left, &right);
+    draw_rect(surface, &right, col);
+    draw_text_in_locale(surface, &right, record->album, font, text_col, col);
+
+    split(right, from_left(width, 0), &left, &right);
+    draw_rect(surface, &right, col);
+    draw_text_in_locale(surface, &right, record->genre, font, text_col, col);
 }
 
 /*
