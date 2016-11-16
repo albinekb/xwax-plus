@@ -533,7 +533,7 @@ struct record* get_record(char *line)
 {
     int n;
     struct record *x;
-    char *field[4];
+    char *field[6];
 
     x = malloc(sizeof *x);
     if (!x) {
