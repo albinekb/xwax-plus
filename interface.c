@@ -1453,15 +1453,11 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
 
     split(rlists, columns(0, 4, SPACER), &rcrates, &rrecords);
 
-    // TODO: split rcrates horizontalliy to cram the album art above/below the crates
-    // split(rcrates,)
-
     split(rcrates, from_bottom(ALBUMART_HEIGHT, 10), &rcrates, &ralbumart);
 
     if (rcrates.w > LIBRARY_MIN_WIDTH) {
         draw_index(surface, rrecords, sel);
         draw_crates(surface, rcrates, sel);
-        //status = selector_current(sel)->pathname;
         draw_albumart(surface, &ralbumart, selector_current(sel)->pathname);
     } else {
         draw_index(surface, *rect, sel);
