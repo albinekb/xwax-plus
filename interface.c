@@ -156,7 +156,9 @@ static TTF_Font *clock_font, *deci_font, *detail_font,
     *font, *em_font, *big_font;
 
 static SDL_Color background_col = {0, 0, 0, 255},
+    playedbg_col = {32, 32, 32, 255},
     text_col = {224, 224, 224, 255},
+    playedtext_col = {124, 124, 124, 255},
     alert_col = {192, 64, 0, 255},
     ok_col = {32, 128, 3, 255},
     elapsed_col = {0, 32, 255, 255},
@@ -1333,18 +1335,32 @@ static void draw_record_row(const void *context,
     struct record *record;
     const struct index *index = context;
     struct rect left, right;
-    SDL_Color col;
-
-    if (selected)
-        col = selected_col;
-    else
-        col = background_col;
+    SDL_Color col = background_col;
+    SDL_Color col_text = text_col;
 
     width = rect.w / 2;
     if (width > RESULTS_ARTIST_WIDTH)
         width = RESULTS_ARTIST_WIDTH;
 
     record = index->record[entry];
+    switch (record->status) {
+        case RECORD_NOT_PLAYED:
+            col_text = text_col;
+            col = background_col;
+            break;
+
+        case RECORD_LOADED:
+            col_text = playedtext_col;
+            col = background_col;
+            break;
+
+        case RECORD_PLAYED:
+            col_text = playedtext_col;
+            col = playedbg_col;
+            break;
+    }
+    if (selected)
+        col = selected_col;
 
     split(rect, from_left(BPM_WIDTH, 0), &left, &right);
     draw_bpm_field(surface, &left, record->bpm, col);
@@ -1353,16 +1369,16 @@ static void draw_record_row(const void *context,
     draw_rect(surface, &left, col);
 
     split(right, from_left(width, 0), &left, &right);
-    draw_text(surface, &left, record->artist, font, text_col, col);
+    draw_text(surface, &left, record->artist, font, col_text, col);
 
     split(right, from_left(SPACER, 0), &left, &right);
     draw_rect(surface, &left, col);
-    draw_text(surface, &right, record->title, font, text_col, col);
+    draw_text(surface, &right, record->title, font, col_text, col);
 
     // Kenny ADDED:
     split(right, from_left(width, 0), &left, &right);
     draw_rect(surface, &right, col);
-    draw_text(surface, &right, record->album, font, text_col, col);
+    draw_text(surface, &right, record->album, font, col_text, col);
 
     split(right, from_left(width, 0), &left, &right);
     draw_rect(surface, &right, col);
