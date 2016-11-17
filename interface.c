@@ -31,6 +31,7 @@
 #include <sys/types.h>
 
 #include <SDL.h>
+#include <SDL_image.h>
 #include <SDL_ttf.h>
 
 #include "interface.h"
@@ -101,6 +102,9 @@
 #define BPM_WIDTH 32
 #define SORT_WIDTH 21
 #define RESULTS_ARTIST_WIDTH 190
+
+#define ALBUMART_HEIGHT 250
+#define ALBUMART_WIDTH 250
 
 #define TOKEN_SPACE 2
 
@@ -1178,6 +1182,55 @@ static void draw_search(SDL_Surface *surface, const struct rect *rect,
     draw_text(surface, &rtext, cm, em_font, detail_col, background_col);
 }
 
+
+static void QuickBlit(SDL_Surface *srcSurface, SDL_Surface *dstSurface,
+                      const struct rect *rect)
+{
+    SDL_Rect src, dst;
+
+    src.x = 0;
+    src.y = 0;
+    src.w = rect->w;
+    src.h = rect->h;
+
+    dst.x = rect->x;
+    dst.y = rect->y;
+    
+    SDL_BlitSurface(srcSurface, &src, dstSurface, &dst);
+}
+
+/*
+    Draw Albumart
+*/
+
+static void draw_albumart(SDL_Surface *surface, const struct rect *rect, const char *status)
+{
+    SDL_Surface *image;
+    SDL_PixelFormat fmt;
+    int slashpos;
+    char albumart[300] = "";
+    FILE *file;
+
+    slashpos = strrchr(status, '/') - status;
+    strncpy(albumart, status, slashpos + 1);
+    strcat(albumart, "folder.jpg");
+
+    fmt = *(surface->format);
+    /* Create new blank SDL surface to overwrite album art */
+    image = SDL_CreateRGBSurface(SDL_SWSURFACE, ALBUMART_WIDTH, ALBUMART_WIDTH * 2,
+                                 fmt.BitsPerPixel,
+                                 fmt.Rmask, fmt.Gmask, fmt.Bmask, fmt.Amask);
+    QuickBlit(image, surface, rect);
+
+    if (file = fopen(albumart, "r")) {
+        fclose(file);
+        image = IMG_Load(albumart);
+        fprintf(stderr, "Loaded albumart %s\n", albumart);
+    }
+    QuickBlit(image, surface, rect);
+}
+
+
 /*
  * Draw a vertical scroll bar representing our view on a list of the
  * given number of entries
@@ -1254,6 +1307,7 @@ static void draw_listbox(const struct listbox *lb, SDL_Surface *surface,
 
 static void draw_crate_row(const void *context,
                            SDL_Surface *surface, const struct rect rect,
+
                            unsigned int entry, bool selected)
 {
     const struct selector *selector = context;
@@ -1376,7 +1430,7 @@ static void draw_index(SDL_Surface *surface, const struct rect rect,
 static void draw_library(SDL_Surface *surface, const struct rect *rect,
                          struct selector *sel)
 {
-    struct rect rsearch, rlists, rcrates, rrecords;
+    struct rect rsearch, rlists, rcrates, rrecords, ralbumart;
     unsigned int rows;
 
     split(*rect, from_top(SEARCH_HEIGHT, SPACER), &rsearch, &rlists);
@@ -1398,9 +1452,17 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
     selector_set_lines(sel, rows);
 
     split(rlists, columns(0, 4, SPACER), &rcrates, &rrecords);
+
+    // TODO: split rcrates horizontalliy to cram the album art above/below the crates
+    // split(rcrates,)
+
+    split(rcrates, from_bottom(ALBUMART_HEIGHT, 10), &rcrates, &ralbumart);
+
     if (rcrates.w > LIBRARY_MIN_WIDTH) {
         draw_index(surface, rrecords, sel);
         draw_crates(surface, rcrates, sel);
+        //status = selector_current(sel)->pathname;
+        draw_albumart(surface, &ralbumart, selector_current(sel)->pathname);
     } else {
         draw_index(surface, *rect, sel);
     }
