@@ -30,6 +30,7 @@
 
 #include "excrate.h"
 #include "external.h"
+#include "index.h"
 
 #define CRATE_ALL "All records"
 
@@ -591,7 +592,7 @@ struct record* get_record(char *line)
      * locale used for searching */
 
     x->match = matchable(x->artist, x->title);
-
+    x->status = RECORD_NOT_PLAYED;
     return x;
 
 bad:
