@@ -66,6 +66,7 @@ void listing_init(struct listing *l)
     index_init(&l->by_artist);
     index_init(&l->by_album);
     index_init(&l->by_bpm);
+    index_init(&l->by_genre);
     index_init(&l->by_order);
     event_init(&l->addition);
 }
@@ -75,6 +76,7 @@ void listing_clear(struct listing *l)
     index_clear(&l->by_artist);
     index_clear(&l->by_album);
     index_clear(&l->by_bpm);
+    index_clear(&l->by_genre);
     index_clear(&l->by_order);
     event_clear(&l->addition);
 }
@@ -280,6 +282,8 @@ struct record* listing_add(struct listing *l, struct record *r)
         return NULL;
     if (index_reserve(&l->by_bpm, 1) == -1)
         return NULL;
+    if (index_reserve(&l->by_genre, 1) == -1)
+        return NULL;
     if (index_reserve(&l->by_order, 1) == -1)
         return NULL;
 
@@ -289,6 +293,11 @@ struct record* listing_add(struct listing *l, struct record *r)
         return x;
 
     x = index_insert(&l->by_album, r, SORT_ALBUM);
+    assert(x != NULL);
+    if (x != r)
+        return x;
+
+    x = index_insert(&l->by_genre, r, SORT_GENRE);
     assert(x != NULL);
     if (x != r)
         return x;
