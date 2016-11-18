@@ -25,8 +25,9 @@
 #define SORT_ARTIST   0
 #define SORT_ALBUM    1
 #define SORT_BPM      2
-#define SORT_PLAYLIST 3
-#define SORT_END      4
+#define SORT_GENRE      3
+#define SORT_PLAYLIST 4
+#define SORT_END      5
 
 #define RECORD_NOT_PLAYED 0
 #define RECORD_LOADED 1
