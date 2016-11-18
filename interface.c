@@ -1205,7 +1205,7 @@ static void QuickBlit(SDL_Surface *srcSurface, SDL_Surface *dstSurface,
     Draw Albumart
 */
 
-static void draw_albumart(SDL_Surface *surface, const struct rect *rect, const char *status)
+static void draw_albumart(SDL_Surface *surface, const struct rect *rect, struct selector *sel)
 {
     SDL_Surface *image;
     SDL_PixelFormat fmt;
@@ -1213,9 +1213,6 @@ static void draw_albumart(SDL_Surface *surface, const struct rect *rect, const c
     char albumart[300] = "";
     FILE *file;
 
-    slashpos = strrchr(status, '/') - status;
-    strncpy(albumart, status, slashpos + 1);
-    strcat(albumart, "folder.jpg");
 
     fmt = *(surface->format);
     /* Create new blank SDL surface to overwrite album art */
@@ -1224,10 +1221,16 @@ static void draw_albumart(SDL_Surface *surface, const struct rect *rect, const c
                                  fmt.Rmask, fmt.Gmask, fmt.Bmask, fmt.Amask);
     QuickBlit(image, surface, rect);
 
-    if (file = fopen(albumart, "r")) {
-        fclose(file);
-        image = IMG_Load(albumart);
-        fprintf(stderr, "Loaded albumart %s\n", albumart);
+    if (selector_current(sel) != NULL){
+        char *status =  selector_current(sel)->pathname;
+        slashpos = strrchr(status, '/') - status;
+        strncpy(albumart, status, slashpos + 1);
+        strcat(albumart, "folder.jpg");
+        if (file = fopen(albumart, "r")) {
+            fclose(file);
+            image = IMG_Load(albumart);
+            fprintf(stderr, "Loaded albumart %s\n", albumart);
+        }
     }
     QuickBlit(image, surface, rect);
 }
@@ -1473,8 +1476,7 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
     if (rcrates.w > LIBRARY_MIN_WIDTH) {
         draw_index(surface, rrecords, sel);
         draw_crates(surface, rcrates, sel);
-        if (selector_current(sel) != NULL)
-            draw_albumart(surface, &ralbumart, selector_current(sel)->pathname);
+        draw_albumart(surface, &ralbumart, sel);
     } else {
         draw_index(surface, *rect, sel);
     }
