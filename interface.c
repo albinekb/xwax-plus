@@ -656,11 +656,15 @@ static void draw_bpm_field(SDL_Surface *surface, const struct rect *rect,
 static void draw_record(SDL_Surface *surface, const struct rect *rect,
                         const struct record *record)
 {
-    struct rect artist, title, left, right;
+    struct rect artist, album, title, left, right;
 
     split(*rect, from_top(BIG_FONT_SPACE, 0), &artist, &title);
+
+    split(title, from_top(FONT_SPACE, 0), &album, &title);
     draw_text_in_locale(surface, &artist, record->artist,
-                        big_font, text_col, background_col);
+              big_font, text_col, background_col);
+    draw_text_in_locale(surface, &album, record->album,
+              font, text_col, background_col);
 
     /* Layout changes slightly if BPM is known */
 
@@ -1081,7 +1085,7 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
 
     position = player_get_elapsed(pl) * t->rate;
 
-    split(*rect, from_top(FONT_SPACE + BIG_FONT_SPACE, 0), &track, &rest);
+    split(*rect, from_top(FONT_SPACE + FONT_SPACE + BIG_FONT_SPACE, 0), &track, &rest);
     if (rest.h < 160)
         rest = *rect;
     else
