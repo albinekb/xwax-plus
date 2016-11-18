@@ -1385,7 +1385,7 @@ static void draw_record_row(const void *context,
 
     split(right, from_left(width*1.5, 0), &left, &right);
     draw_rect(surface, &right, col);
-    draw_text(surface, &right, record->genre, font, text_col, col);
+    draw_text(surface, &right, record->genre, font, col_text, col);
 }
 
 /*
