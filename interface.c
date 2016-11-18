@@ -1379,11 +1379,11 @@ static void draw_record_row(const void *context,
     draw_text(surface, &right, record->title, font, col_text, col);
 
     // Kenny ADDED:
-    split(right, from_left(width, 0), &left, &right);
+    split(right, from_left(width * 2, 0), &left, &right);
     draw_rect(surface, &right, col);
     draw_text(surface, &right, record->album, font, col_text, col);
 
-    split(right, from_left(width, 0), &left, &right);
+    split(right, from_left(width*1.5, 0), &left, &right);
     draw_rect(surface, &right, col);
     draw_text(surface, &right, record->genre, font, text_col, col);
 }
