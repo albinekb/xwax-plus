@@ -55,6 +55,7 @@ struct match {
     char *words[32]; /* NULL-terminated array */
 };
 
+void record_set_played(struct record *re);
 void index_init(struct index *ls);
 void index_clear(struct index *ls);
 void index_blank(struct index *ls);
