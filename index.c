@@ -145,6 +145,12 @@ static int record_cmp_artist(const struct record *a, const struct record *b)
     return strcmp(a->pathname, b->pathname);
 }
 
+
+void record_set_played(struct record *re){
+
+    re->status = RECORD_PLAYED;
+}
+
 /*
  * Standard comparison function between two records -> album
  */

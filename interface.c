@@ -1091,8 +1091,8 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
         if (position > 0)
            // we'd like to set the status to played here.
            // wont work, error: assignment of member 'status' in read-only object
-           // deck->record->status = RECORD_PLAYED;
-            printf("oh");
+           // trying with function call.
+            record_set_played(deck->record);
     }
 
     split(*rect, from_top(FONT_SPACE + FONT_SPACE + BIG_FONT_SPACE, 0), &track, &rest);
