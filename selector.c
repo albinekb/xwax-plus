@@ -279,11 +279,12 @@ void selector_clear(struct selector *sel)
  * Pre: lines is greater than zero
  */
 
-void selector_set_lines(struct selector *sel, unsigned int lines)
+void selector_set_lines(struct selector *sel, unsigned int lines_crates, unsigned int lines_records)
 {
-    assert(lines > 0);
-    listbox_set_lines(&sel->crates, ( lines / 2 ) - 2 );
-    listbox_set_lines(&sel->records, lines);
+    assert(lines_crates > 0);
+    assert(lines_records > 0);
+    listbox_set_lines(&sel->crates, lines_crates);
+    listbox_set_lines(&sel->records, lines_records);
 }
 
 /*
