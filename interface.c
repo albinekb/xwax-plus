@@ -1471,29 +1471,30 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
                          struct selector *sel)
 {
     struct rect rsearch, rlists, rcrates, rrecords, ralbumart;
-    unsigned int rows;
+    unsigned int rows_rec, rows_crate;
 
     split(*rect, from_top(SEARCH_HEIGHT, SPACER), &rsearch, &rlists);
 
-    rows = count_rows(rlists, FONT_SPACE);
-    if (rows == 0) {
+    rows_rec = count_rows(rlists, FONT_SPACE);
+    if (rows_rec == 0) {
 
         /* Hide the selector: draw nothing, and make it a 'virtual'
          * one row selector. This is enough to use it from the search
          * field and status only */
 
         draw_search(surface, rect, sel);
-        selector_set_lines(sel, 1);
+        selector_set_lines(sel, 1, 1);
 
         return;
     }
 
     draw_search(surface, &rsearch, sel);
-    selector_set_lines(sel, rows);
 
     split(rlists, columns(0, 4, SPACER), &rcrates, &rrecords);
 
     split(rcrates, from_bottom(ALBUMART_HEIGHT, 10), &rcrates, &ralbumart);
+    rows_crate = count_rows(rcrates, FONT_SPACE);
+    selector_set_lines(sel, rows_crate,rows_rec);
 
     if (rcrates.w > LIBRARY_MIN_WIDTH) {
         draw_index(surface, rrecords, sel);

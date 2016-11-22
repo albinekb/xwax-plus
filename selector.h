@@ -50,7 +50,7 @@ struct selector {
 void selector_init(struct selector *sel, struct library *lib);
 void selector_clear(struct selector *sel);
 
-void selector_set_lines(struct selector *sel, unsigned int lines);
+void selector_set_lines(struct selector *sel, unsigned int lines_crates, unsigned int lines_records);
 
 void selector_up(struct selector *sel);
 void selector_down(struct selector *sel);
