@@ -463,18 +463,14 @@ static void process_bitstream(struct timecoder *tc, signed int m)
 
     if (tc->timecode == tc->bitstream){
     	tc->valid_counter++;
-
-        //printf("valid counter: %d\n", tc->valid_counter);
+        // reset lost counter only when we had a streak of 13 fitting values
         if (tc->valid_counter > 13)
         {
             tc->lost_counter = 0;
         }
-
     }
-
     else {
         // We didnt get what we were expecting.
-        //printf("were lost.\n");
         tc->timecode = tc->bitstream;
         tc->valid_counter = 0;
         tc->lost_counter++;    
