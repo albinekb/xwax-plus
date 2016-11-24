@@ -1043,7 +1043,6 @@ static void draw_deck_status(SDL_Surface *surface,
 
     tc = timecoder_get_position(pl->timecoder, NULL);
 
-   // printf("timecode: %d\n", tc);
     if (check_flip(pl->timecoder,tc,deckID) == 1)
     {
         printf("it was one\n");
@@ -1622,21 +1621,11 @@ static void defer_selector_redraw(struct observer *o, void *x)
 
 int check_flip(struct timecoder *tc, int timeCode, int deckID){
 
-    //printf("checking flip...timecode: %d\n", timeCode);
     if ( timeCode != -1 ){
-        if (tc->sniff_flip)
-        {
-            printf("were possibly on the other side now. waiting for valid sample amount to confirm\n");
-        }
-        //tc->lost_counter = 0;
-//        printf("Im not lost.\n");
         if (tc->sniff_flip == true && tc->valid_counter > 25){
             // looks like changing definitions helped.
             tc->sniff_flip = false;
             tc->sideA = !tc->sideA;
-            printf("Vinyl flipped!\n");
-         
-            //printf("sending load event...\n");
             SDL_Event loadEvent;
             loadEvent.type = SDL_KEYDOWN;
             loadEvent.key.keysym.sym = SDLK_F4;
@@ -1646,37 +1635,24 @@ int check_flip(struct timecoder *tc, int timeCode, int deckID){
 
             SDL_PushEvent(&loadEvent);
             return 1;
-            //printf("sending load event...DONE\n");   
         }
     }else{
-        //tc->lost_counter++;
-        //printf("lost for: %d\n", tc->lost_counter);
-
-    // TODO: Check if record was flipped. 
-    //       If 2nd LUT gives better results.
 
     // switching definitions (sides)
 
         if (tc->lost_counter > 130)
         {
-        tc->lost_counter = 0;
-        //printf("sniffing: %s\n", tc->sniff_flip ? "true" : "false");
-            // This part of the code is set up for externally amped signals!
-            // Using software preamp were lost for longer periods of time (more errors).
-            // possibly this leads to unwanted behaviour of this code when using without amped signals.
+            tc->lost_counter = 0;
 
-            // weve been lost for 25 frames now. switch definitions.
-            printf("Switching definitions...\n");
+            // weve been lost for a while, now. switch definitions.
             tc->temp = tc->def;
             tc->def = tc->def2;
             tc->def2 = tc->temp;
 
             // entering sniff flip mode, or exiting if switching timecode definitions
             // still gives us an error streak
-//            tc->sniff_flip = true;
             
             tc->sniff_flip = !tc->sniff_flip;
-            printf("Switching definitions... DONE.\n");
         }
         return 0;
     }
