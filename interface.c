@@ -1005,7 +1005,7 @@ static void draw_deck_status(SDL_Surface *surface,
 
     if (check_flip(pl->timecoder,tc,deckID) == 1)
     {
-        printf("it was one\n");
+        /* Flip detected. setting offsets for the corresponding sides */
         if (pl->timecoder->sideA)
         {
             deck->player.offset = 24;
