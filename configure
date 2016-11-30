@@ -37,10 +37,10 @@ EOF
 # Set some defaults and parse the command line
 
 PREFIX=
-ALSA=false
-JACK=false
+ALSA=true
+JACK=true
 OSS=false
-DEBUG=true
+DEBUG=false
 PROFILE=false
 
 while [ $# -ge 1 ]; do
