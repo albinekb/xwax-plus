@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Mark Hills <mark@xwax.org>
+ * Copyright (C) 2015 Mark Hills <mark@xwax.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,8 +24,10 @@
 #include <string.h>
 #include <unistd.h>
 
+
 #include "debug.h"
 #include "timecoder.h"
+#include "selector.h"
 
 #define ZERO_THRESHOLD (128 << 16)
 
@@ -308,6 +310,9 @@ void timecoder_init(struct timecoder *tc, struct timecode_def *def,
     tc->valid_counter = 0;
     tc->timecode_ticker = 0;
 
+    // TEST
+    tc->scrollCheck_marker = 0;
+
     tc->mon = NULL;
 }
 
@@ -444,13 +449,31 @@ static void process_bitstream(struct timecoder *tc, signed int m)
 	tc->bitstream = ((tc->bitstream << 1) & mask) + b;
     }
 
-    if (tc->timecode == tc->bitstream)
-	tc->valid_counter++;
-    else {
-	tc->timecode = tc->bitstream;
-	tc->valid_counter = 0;
-    }
+    if (tc->timecode == tc->bitstream){
 
+	tc->valid_counter++;
+    //printf("Im not lost.\n");
+     }
+
+    else {
+        // We didnt get what we were expecting.
+    tc->timecode = tc->bitstream;
+    tc->valid_counter = 0;
+
+    // TODO: Check if record was flipped. 
+    //       If 2nd LUT gives better results.
+
+   /* if(true){
+    // Test Code .. WORKING! :)
+        SDL_Event eventTest;
+        eventTest.type = SDL_KEYDOWN;
+        eventTest.key.keysym.sym = SDLK_DOWN;
+        printf("Pushing Event...\n");
+        SDL_PushEvent(&eventTest);
+        printf("Pushing Event... DONE\n"); 
+    }*/
+    
+    }
     /* Take note of the last time we read a valid timecode */
 
     tc->timecode_ticker = 0;
@@ -585,7 +608,7 @@ void timecoder_submit(struct timecoder *tc, signed short *pcm, size_t npcm)
             secondary = left;
         }
 
-	process_sample(tc, primary, secondary);
+	    process_sample(tc, primary, secondary);
         update_monitor(tc, left, right);
 
         pcm += TIMECODER_CHANNELS;

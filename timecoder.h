@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Mark Hills <mark@xwax.org>
+ * Copyright (C) 2015 Mark Hills <mark@xwax.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,6 +21,8 @@
 #define TIMECODER_H
 
 #include <stdbool.h>
+
+ 
 
 #include "lut.h"
 #include "pitch.h"
@@ -52,6 +54,11 @@ struct timecoder_channel {
 struct timecoder {
     struct timecode_def *def;
     double speed;
+
+    /* Track Select Stuff */
+    //bool trackSelectMode;
+    int scrollCheck_marker;
+    bool trackSelectMode;
 
     /* Precomputed values */
 

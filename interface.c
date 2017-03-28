@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Mark Hills <mark@xwax.org>
+ * Copyright (C) 2015 Mark Hills <mark@xwax.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -704,6 +704,10 @@ static void draw_spinner(SDL_Surface *surface, const struct rect *rect,
 
     rps = timecoder_revs_per_sec(pl->timecoder);
     rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
+    printf("rangle: %d\n", rangle);
+
+    scrollCheck(pl, timecoder_get_position(pl->timecoder, NULL), rps, rangle);
+
 
     if (elapsed < 0 || remain < 0)
         col = alert_col;
@@ -990,7 +994,7 @@ static void draw_deck_top(SDL_Surface *surface, const struct rect *rect,
 
 static void draw_deck_status(SDL_Surface *surface,
                              const struct rect *rect,
-                             const struct deck *deck)
+                             const struct deck *deck, int deckID)
 {
     char buf[128], *c;
     int tc;
@@ -1001,6 +1005,32 @@ static void draw_deck_status(SDL_Surface *surface,
     c += sprintf(c, "%s: ", pl->timecoder->def->name);
 
     tc = timecoder_get_position(pl->timecoder, NULL);
+
+
+
+    // TEST If we just came from trackselection mode in the play area
+
+    if(tc < pl->timecoder->def->safe-150000 && pl->timecoder->trackSelectMode == true ){
+        pl->timecoder->trackSelectMode = false;
+        //printf("here well select a track on deck %d.\n",deckID);
+        SDL_Event loadNPlay;
+        loadNPlay.type = SDL_KEYDOWN;
+        loadNPlay.key.keysym.sym = SDLK_F1;
+        if (deckID == 1){
+            loadNPlay.key.keysym.sym = SDLK_F5;
+        }
+        printf("loading track.\n");
+        SDL_PushEvent(&loadNPlay);
+    }
+    else{
+        
+       // int rps = timecoder_revs_per_sec(pl->timecoder);
+       //int rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
+        //printf("ranglecheck %d\n", player_get_position(pl));
+       // scrollCheck(pl, tc, rps, rangle);
+    }
+
+
     if (pl->timecode_control && tc != -1) {
         c += sprintf(c, "%7d ", tc);
     } else {
@@ -1019,11 +1049,12 @@ static void draw_deck_status(SDL_Surface *surface,
 }
 
 /*
- * Draw a single deck
+ * Draw a single deck 
+ * TEST: Added Deck ID for reference
  */
 
 static void draw_deck(SDL_Surface *surface, const struct rect *rect,
-                      struct deck *deck, int meter_scale)
+                      struct deck *deck, int meter_scale, int deckID)
 {
     int position;
     struct rect track, top, meters, status, rest, lower;
@@ -1051,7 +1082,7 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
     if (meters.h < 64)
         meters = lower;
     else
-        draw_deck_status(surface, &status, deck);
+        draw_deck_status(surface, &status, deck, deckID);
 
     draw_meters(surface, &meters, t, position, meter_scale);
 }
@@ -1070,7 +1101,7 @@ static void draw_decks(SDL_Surface *surface, const struct rect *rect,
 
     for (d = 0; d < ndecks; d++) {
         split(right, columns(d, ndecks, BORDER), &left, &right);
-        draw_deck(surface, &left, &deck[d], meter_scale);
+        draw_deck(surface, &left, &deck[d], meter_scale, d);
     }
 }
 
@@ -1556,6 +1587,55 @@ static void defer_selector_redraw(struct observer *o, void *x)
     push_event(EVENT_SELECTOR);
 }
 
+
+
+int scrollCheck(struct player *pl, int timeCode, int rps, int rangle){
+    printf("called with timecode %d rps %d and rangle %d\n",timeCode, rps, rangle);
+    int success = 0;
+//    int rangle, rps;
+    
+    if( pl->timecoder->trackSelectMode == true || (timeCode != -1 && timeCode + 150000 > pl->timecoder->def->safe && timeCode < pl->timecoder->def->safe )){
+        
+        bool crateScroll = timeCode + 75000 > pl->timecoder->def->safe;
+        pl->timecoder->trackSelectMode = true;
+
+         printf("select!\n");
+
+        SDL_Event scrollEvent;
+        scrollEvent.type = SDL_KEYDOWN;
+        scrollEvent.key.keysym.sym = SDLK_DOWN;
+
+        //rps = timecoder_revs_per_sec(pl->timecoder);
+        //rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
+        printf("rangleinside: %d\n", rangle);
+
+        //int difference = fabs(pl->timecoder->scrollCheck_marker - *rangle);
+        //pl->timecoder->scrollCheck_marker += difference;
+        //printf("scrollmark %d\n",pl->timecoder->scrollCheck_marker);
+    /*    if (crateScroll){                
+            scrollEvent.key.keysym.sym = SDLK_RIGHT;
+        }
+
+        if(!pl->timecoder->forwards){
+            printf("were goin backwards!\n");
+            scrollEvent.key.keysym.sym = SDLK_UP;
+            if (crateScroll){                
+                scrollEvent.key.keysym.sym = SDLK_LEFT;
+            }
+        }
+
+        //printf("diff: %d\n",difference );
+        if (  pl->timecoder->scrollCheck_marker > 250 ){
+            pl->timecoder->scrollCheck_marker = 0;
+
+            SDL_PushEvent(&scrollEvent);
+            printf("Successfully scrolled..\n"); 
+            success = 1;
+        }  */                      
+    }
+    return success;
+}
+
 /*
  * The SDL interface thread
  */
@@ -1688,7 +1768,6 @@ static int interface_main(void)
             UPDATE(surface, &rplayers);
             decks_update = false;
         }
-
     } /* main loop */
 
  finish:
