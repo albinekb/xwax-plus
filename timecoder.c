@@ -310,8 +310,10 @@ void timecoder_init(struct timecoder *tc, struct timecode_def *def,
     tc->valid_counter = 0;
     tc->timecode_ticker = 0;
 
-    // TEST
-    tc->scrollCheck_marker = 0;
+    tc->needleOffRecord_1 = 0;
+    tc->needleOffRecord_2 = 0;
+    tc->oldAngle_1 = 0;
+    tc->oldAngle_2 = 0;
 
     tc->mon = NULL;
 }
