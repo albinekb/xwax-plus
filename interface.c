@@ -744,68 +744,84 @@ static void draw_spinner(SDL_Surface *surface, const struct rect *rect,
 
     rps = timecoder_revs_per_sec(pl->timecoder);
     rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
-    printf("rangle: %d\n", rangle);
+    //printf("rangle: %d\n", rangle);
+
 
     int timeCode = timecoder_get_position(pl->timecoder, NULL);
-    // TEST If we just came from trackselection mode in the play area
+    SDL_Event scrollEvent;
+    scrollEvent.type = SDL_MOUSEMOTION;
+    int *marker, *oldAngle, *needleOffRecord = NULL;
+    if ( deckID == 1 ){
 
-    if(timeCode < pl->timecoder->def->safe-150000 && pl->timecoder->trackSelectMode == true ){
-        
-        pl->timecoder->trackSelectMode = false;
-        //printf("here well select a track on deck %d.\n",deckID);
-        SDL_Event loadNPlay;
-        loadNPlay.type = SDL_KEYDOWN;
-        loadNPlay.key.keysym.sym = SDLK_F1;
-
-        if (deckID == 1){
-            loadNPlay.key.keysym.sym = SDLK_F5;
-        }
-        printf("loading track.\n");
-        SDL_PushEvent(&loadNPlay);
+        marker = &pl->timecoder->scrollCheck_marker_2;
+        oldAngle = &pl->timecoder->oldAngle_2;
+        needleOffRecord = &pl->timecoder->needleOffRecord_2;
     }
     else{
+
+        marker = &pl->timecoder->scrollCheck_marker_1;
+        oldAngle = &pl->timecoder->oldAngle_1;
+        needleOffRecord = &pl->timecoder->needleOffRecord_1;
+    }
+
+    //printf("debug:\ntimeCode: %d\nmarker: %d\noAngle: %d\needleOffRecord: %d\ndiff: %d\nmarker-rangle: %d\n", timeCode, *marker, *oldAngle, *needleOffRecord, abs(rangle - *oldAngle), abs( *marker - rangle ));
+
+    bool needleInScrollArea = timeCode > pl->timecoder->def->safe - 150000 && timeCode < pl->timecoder->def->safe;
         
-       // scrollCheck(pl, tc, rps, rangle);
+    // if we are inside scroll area
+    if( ( timeCode == -1 && pl->timecoder->trackSelectMode == true) || ( needleInScrollArea ) ){
 
-        //check if we entered freshly
-        if(pl->timecoder->trackSelectMode == false && timeCode != -1 && timeCode + 150000 > pl->timecoder->def->safe && timeCode < pl->timecoder->def->safe ){
-            pl->timecoder->scrollCheck_marker = rangle;
-            pl->timecoder->trackSelectMode = true;
-        }
-        if( pl->timecoder->trackSelectMode == true ){
-//            || (timeCode != -1 && timeCode + 150000 > pl->timecoder->def->safe && timeCode < pl->timecoder->def->safe ))
+        // keep track of rotation state to check later if we're still on the record
+        if( abs(rangle - *oldAngle) > 50 ) 
+            *oldAngle = rangle;
+
+        if (timeCode != -1 && abs(*marker - rangle) > 60)
+            *needleOffRecord = 0;
+                  
+        if ( timeCode == -1 && abs(rangle - *oldAngle) < 50 )
+            *needleOffRecord = *needleOffRecord + 1;
         
+        // if we already were inside before
+        if( pl->timecoder->trackSelectMode ){
 
-             printf("select!\n");
+                // if the angle moved is large enough
+            if( *needleOffRecord < 10 && abs( *marker - rangle ) > 200 ){
 
-            SDL_Event scrollEvent;
-            scrollEvent.type = SDL_KEYDOWN;
-            scrollEvent.key.keysym.sym = SDLK_DOWN;
-            printf("diffenece: %d\n", abs(pl->timecoder->scrollCheck_marker - rangle ));
-            if (  abs(pl->timecoder->scrollCheck_marker - rangle )> 150 ){
-              /*if (crateScroll){                
+                *marker = rangle;
+                scrollEvent.type = SDL_KEYDOWN;
+                scrollEvent.key.keysym.sym = SDLK_DOWN;
+               /*if (crateScroll){                
                     scrollEvent.key.keysym.sym = SDLK_RIGHT;
                 }*/
 
+                    // if we are going backwards
                 if(!pl->timecoder->forwards){
-                    printf("were goin backwards!\n");
+                   // printf("were goin backwards!\n");
                     scrollEvent.key.keysym.sym = SDLK_UP;
                     /*if (crateScroll){                
                         scrollEvent.key.keysym.sym = SDLK_LEFT;
                     }*/
                 }
+            }
+        }
+        else{
+            pl->timecoder->trackSelectMode = true;
+            *marker = rangle;
+        }
+    }else if ( pl->timecoder->trackSelectMode ) {
+        // we are not in the scroll area but just were
 
-                pl->timecoder->scrollCheck_marker = rangle;
-
-                SDL_PushEvent(&scrollEvent);
-                printf("Successfully scrolled..\n"); 
-               
-            }                        
+        pl->timecoder->trackSelectMode = false;
+        scrollEvent.type = SDL_KEYDOWN;
+        scrollEvent.key.keysym.sym = SDLK_F1;
+        if (deckID == 1){
+            scrollEvent.key.keysym.sym = SDLK_F5;
         }
     }
 
-
-
+    if ( scrollEvent.type == SDL_KEYDOWN )
+        SDL_PushEvent(&scrollEvent);
+    
     if (elapsed < 0 || remain < 0)
         col = alert_col;
     else
@@ -1103,6 +1119,22 @@ static void draw_deck_status(SDL_Surface *surface,
 
     tc = timecoder_get_position(pl->timecoder, NULL);
 
+    // TEST If we just came from trackselection mode in the play area
+/*
+    if(tc < pl->timecoder->def->safe-150000 && pl->timecoder->trackSelectMode == true ){
+        
+        pl->timecoder->trackSelectMode = false;
+        //printf("here well select a track on deck %d.\n",deckID);
+        SDL_Event loadNPlay;
+        loadNPlay.type = SDL_KEYDOWN;
+        loadNPlay.key.keysym.sym = SDLK_F1;
+
+        if (deckID == 1){
+            loadNPlay.key.keysym.sym = SDLK_F5;
+        }
+        printf("loading track.\n");
+        SDL_PushEvent(&loadNPlay);
+    }*/
 
     if (pl->timecode_control && tc != -1) {
         c += sprintf(c, "%7d ", tc);
@@ -1659,54 +1691,6 @@ static void defer_status_redraw(struct observer *o, void *x)
 static void defer_selector_redraw(struct observer *o, void *x)
 {
     push_event(EVENT_SELECTOR);
-}
-
-
-
-int scrollCheck(struct player *pl, int timeCode, int rps, int rangle){
-    printf("called with timecode %d rps %d and rangle %d\n",timeCode, rps, rangle);
-    int success = 0;
-//    int rangle, rps;
-    
-    if( pl->timecoder->trackSelectMode == true || (timeCode != -1 && timeCode + 150000 > pl->timecoder->def->safe && timeCode < pl->timecoder->def->safe )){
-        
-        pl->timecoder->trackSelectMode = true;
-
-         printf("select!\n");
-
-        SDL_Event scrollEvent;
-        scrollEvent.type = SDL_KEYDOWN;
-        scrollEvent.key.keysym.sym = SDLK_DOWN;
-
-        //rps = timecoder_revs_per_sec(pl->timecoder);
-        //rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
-        //printf("rangleinside: %d\n", rangle);
-
-        //int difference = fabs(pl->timecoder->scrollCheck_marker - *rangle);
-        //pl->timecoder->scrollCheck_marker += difference;
-        //printf("scrollmark %d\n",pl->timecoder->scrollCheck_marker);
-        /*if (crateScroll){                
-            scrollEvent.key.keysym.sym = SDLK_RIGHT;
-        }*/
-
-        if(!pl->timecoder->forwards){
-            printf("were goin backwards!\n");
-            scrollEvent.key.keysym.sym = SDLK_UP;
-            /*if (crateScroll){                
-                scrollEvent.key.keysym.sym = SDLK_LEFT;
-            }*/
-        }
-
-        //printf("diff: %d\n",difference );
-        if (  pl->timecoder->scrollCheck_marker > 250 ){
-            pl->timecoder->scrollCheck_marker = 0;
-
-            SDL_PushEvent(&scrollEvent);
-            printf("Successfully scrolled..\n"); 
-            success = 1;
-        }                        
-    }
-    return success;
 }
 
 /*

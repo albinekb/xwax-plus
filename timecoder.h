@@ -57,7 +57,7 @@ struct timecoder {
 
     /* Track Select Stuff */
     //bool trackSelectMode;
-    int scrollCheck_marker;
+    int scrollCheck_marker_1, scrollCheck_marker_2, oldAngle_1, oldAngle_2, needleOffRecord_1, needleOffRecord_2;
     bool trackSelectMode;
 
     /* Precomputed values */
