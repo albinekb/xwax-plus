@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Mark Hills <mark@xwax.org>
+ * Copyright (C) 2015 Mark Hills <mark@xwax.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -690,7 +690,7 @@ static void draw_scope(SDL_Surface *surface, const struct rect *rect,
  */
 
 static void draw_spinner(SDL_Surface *surface, const struct rect *rect,
-                         struct player *pl)
+                         struct player *pl, int deckID)
 {
     int x, y, r, c, rangle, pangle;
     double elapsed, remain, rps;
@@ -704,8 +704,87 @@ static void draw_spinner(SDL_Surface *surface, const struct rect *rect,
     remain = player_get_remain(pl);
 
     rps = timecoder_revs_per_sec(pl->timecoder);
-    rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;       
+    rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
 
+    int timeCode = timecoder_get_position(pl->timecoder, NULL);
+    SDL_Event scrollEvent;
+    scrollEvent.type = SDL_MOUSEMOTION;
+    int *marker, *oldAngle, *needleOffRecord = NULL;
+    if ( deckID == 1 ){
+
+        marker = &pl->timecoder->scrollCheck_marker_2;
+        oldAngle = &pl->timecoder->oldAngle_2;
+        needleOffRecord = &pl->timecoder->needleOffRecord_2;
+    }
+    else{
+
+        marker = &pl->timecoder->scrollCheck_marker_1;
+        oldAngle = &pl->timecoder->oldAngle_1;
+        needleOffRecord = &pl->timecoder->needleOffRecord_1;
+    }
+
+    //printf("debug:\ntimeCode: %d\nmarker: %d\noAngle: %d\needleOffRecord: %d\ndiff: %d\nmarker-rangle: %d\n", timeCode, *marker, *oldAngle, *needleOffRecord, abs(rangle - *oldAngle), abs( *marker - rangle ));
+
+    bool needleInScrollArea = timeCode > pl->timecoder->def->safe - 150000 && timeCode < pl->timecoder->def->safe;
+    bool crateScroll = timeCode > pl->timecoder->def->safe - 75000 && timeCode < pl->timecoder->def->safe;
+          
+    // if we are inside scroll area
+    if( ( timeCode == -1 && pl->timecoder->trackSelectMode == true) || ( needleInScrollArea ) ){
+
+        // keep track of rotation state to check later if we're still on the record
+        if( abs(rangle - *oldAngle) > 50 ) 
+            *oldAngle = rangle;
+
+        if (timeCode != -1 && abs(*marker - rangle) > 60)
+            *needleOffRecord = 0;
+                  
+        if ( timeCode == -1 && abs(rangle - *oldAngle) < 50 )
+            *needleOffRecord = *needleOffRecord + 1;
+        
+        // if we already were inside before
+        if( pl->timecoder->trackSelectMode ){
+
+                // if the angle moved is large enough -> 14 selector movements per rotation
+            if( *needleOffRecord < 10 && abs( *marker - rangle ) > 1023/14 ){
+
+                *marker = rangle;
+                scrollEvent.type = SDL_KEYDOWN;
+                scrollEvent.key.keysym.sym = SDLK_DOWN;
+                if (crateScroll)               
+                    scrollEvent.key.keysym.sym = SDLK_RIGHT;
+                
+
+                    // if we are going backwards
+                if(!pl->timecoder->forwards){
+                   // printf("were goin backwards!\n");
+                    scrollEvent.key.keysym.sym = SDLK_UP;
+                    if (crateScroll)                
+                        scrollEvent.key.keysym.sym = SDLK_LEFT;
+                    
+                }
+            }else if ( /* pl->timecoder->trackSelectMode */ *needleOffRecord > 100 ) {
+                // we are not in the scroll area but just were
+                // if needle hasnt moved for 100 frames or was lifted for that time
+
+                pl->timecoder->trackSelectMode = false;
+                scrollEvent.type = SDL_KEYDOWN;
+                scrollEvent.key.keysym.sym = SDLK_F1;
+                if (deckID == 1){
+                    scrollEvent.key.keysym.sym = SDLK_F5;
+                }
+            }
+
+        }
+        else{
+            pl->timecoder->trackSelectMode = true;
+            *marker = rangle;
+        }
+    }
+
+    // if an event was set
+    if ( scrollEvent.type == SDL_KEYDOWN )
+        SDL_PushEvent(&scrollEvent);
+    
     if (elapsed < 0 || remain < 0)
         col = alert_col;
     else
@@ -955,7 +1034,7 @@ static void draw_meters(SDL_Surface *surface, const struct rect *rect,
  */
 
 static void draw_deck_top(SDL_Surface *surface, const struct rect *rect,
-                          struct player *pl, struct track *track)
+                          struct player *pl, struct track *track, int deckID)
 {
     struct rect clocks, left, right, spinner, scope;
 
@@ -975,7 +1054,7 @@ static void draw_deck_top(SDL_Surface *surface, const struct rect *rect,
     if (left.w < 0)
         return;
     split(spinner, from_bottom(SPINNER_SIZE, 0), NULL, &spinner);
-    draw_spinner(surface, &spinner, pl);
+    draw_spinner(surface, &spinner, pl, deckID);
 
     split(left, from_right(SCOPE_SIZE, SPACER), &clocks, &scope);
     if (clocks.w < 0)
@@ -992,6 +1071,7 @@ static void draw_deck_top(SDL_Surface *surface, const struct rect *rect,
 static void draw_deck_status(SDL_Surface *surface,
                              const struct rect *rect,
                              struct deck *deck, int deckID)
+
 {
     char buf[128], *c;
     int tc;
@@ -1013,6 +1093,7 @@ static void draw_deck_status(SDL_Surface *surface,
             deck->player.offset = 8;
         }
     }
+
 
     if (pl->timecode_control && tc != -1) {
         c += sprintf(c, "%7d ", tc);
@@ -1059,7 +1140,7 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
     if (lower.h < 64)
         lower = rest;
     else
-        draw_deck_top(surface, &top, pl, t);
+        draw_deck_top(surface, &top, pl, t, deckID);
 
     split(lower, from_bottom(FONT_SPACE, SPACER), &meters, &status);
     if (meters.h < 64)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Mark Hills <mark@xwax.org>
+ * Copyright (C) 2015 Mark Hills <mark@xwax.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -61,6 +61,8 @@ struct timecoder {
     unsigned int lost_counter;
     bool sideA;
     bool sniff_flip;
+    int scrollCheck_marker_1, scrollCheck_marker_2, oldAngle_1, oldAngle_2, needleOffRecord_1, needleOffRecord_2;
+    bool trackSelectMode;
 
     /* Precomputed values */
 

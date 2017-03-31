@@ -45,7 +45,7 @@
  * the timecode is greater than this value, recover by jumping
  * straight to the position given by the timecode. */
 
-#define SKIP_THRESHOLD (1.0 / 8) /* before dropping audio */
+#define SKIP_THRESHOLD (1.0 / 12) /* before dropping audio */
 
 /* The base volume level. A value of 1.0 leaves no headroom to play
  * louder when the record is going faster than 1.0. */

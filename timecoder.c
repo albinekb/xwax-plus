@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Mark Hills <mark@xwax.org>
+ * Copyright (C) 2015 Mark Hills <mark@xwax.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -325,6 +325,11 @@ void timecoder_init(struct timecoder *tc, struct timecode_def *def,
     tc->valid_counter = 0;
     tc->timecode_ticker = 0;
 
+    tc->needleOffRecord_1 = 0;
+    tc->needleOffRecord_2 = 0;
+    tc->oldAngle_1 = 0;
+    tc->oldAngle_2 = 0;
+
     tc->mon = NULL;
 }
 
@@ -474,6 +479,7 @@ static void process_bitstream(struct timecoder *tc, signed int m)
         tc->timecode = tc->bitstream;
         tc->valid_counter = 0;
         tc->lost_counter++;    
+
     }
     /* Take note of the last time we read a valid timecode */
 
