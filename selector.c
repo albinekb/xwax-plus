@@ -40,6 +40,8 @@ static void retain_target(struct selector *sel)
 
     switch (sel->sort) {
     case SORT_ARTIST:
+    case SORT_GENRE:
+    case SORT_ALBUM:
     case SORT_BPM:
         n = index_find(l, sel->target, sel->sort);
         break;
@@ -116,8 +118,12 @@ static struct index* initial(struct selector *sel)
     switch (sel->sort) {
     case SORT_ARTIST:
         return &c->listing->by_artist;
+    case SORT_ALBUM:
+        return &c->listing->by_album;
     case SORT_BPM:
         return &c->listing->by_bpm;
+    case SORT_GENRE:
+        return &c->listing->by_genre;
     case SORT_PLAYLIST:
         return &c->listing->by_order;
     default:
@@ -273,11 +279,12 @@ void selector_clear(struct selector *sel)
  * Pre: lines is greater than zero
  */
 
-void selector_set_lines(struct selector *sel, unsigned int lines)
+void selector_set_lines(struct selector *sel, unsigned int lines_crates, unsigned int lines_records)
 {
-    assert(lines > 0);
-    listbox_set_lines(&sel->crates, lines);
-    listbox_set_lines(&sel->records, lines);
+    assert(lines_crates > 0);
+    assert(lines_records > 0);
+    listbox_set_lines(&sel->crates, lines_crates);
+    listbox_set_lines(&sel->records, lines_records);
 }
 
 /*

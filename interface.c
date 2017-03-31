@@ -30,6 +30,7 @@
 #include <sys/types.h>
 
 #include <SDL.h>
+#include <SDL_image.h>
 #include <SDL_ttf.h>
 
 #include "interface.h"
@@ -99,7 +100,10 @@
 
 #define BPM_WIDTH 32
 #define SORT_WIDTH 21
-#define RESULTS_ARTIST_WIDTH 200
+#define RESULTS_ARTIST_WIDTH 190
+
+#define ALBUMART_HEIGHT 250
+#define ALBUMART_WIDTH 250
 
 #define TOKEN_SPACE 2
 
@@ -153,7 +157,9 @@ static TTF_Font *clock_font, *deci_font, *detail_font,
     *font, *em_font, *big_font;
 
 static SDL_Color background_col = {0, 0, 0, 255},
+    playedbg_col = {32, 32, 32, 255},
     text_col = {224, 224, 224, 255},
+    playedtext_col = {124, 124, 124, 255},
     alert_col = {192, 64, 0, 255},
     ok_col = {32, 128, 3, 255},
     elapsed_col = {0, 32, 255, 255},
@@ -162,7 +168,9 @@ static SDL_Color background_col = {0, 0, 0, 255},
     detail_col = {128, 128, 128, 255},
     needle_col = {255, 255, 255, 255},
     artist_col = {16, 64, 0, 255},
-    bpm_col = {64, 16, 0, 255};
+    album_col = {16, 16, 128, 255},
+    genre_col = {64, 32, 16, 255},
+    bpm_col = {96, 16, 0, 255};
 
 static unsigned short *spinner_angle, spinner_size;
 
@@ -612,11 +620,14 @@ static void draw_bpm_field(SDL_Surface *surface, const struct rect *rect,
 static void draw_record(SDL_Surface *surface, const struct rect *rect,
                         const struct record *record)
 {
-    struct rect artist, title, left, right;
+    struct rect artist, album, title, left, right;
 
     split(*rect, from_top(BIG_FONT_SPACE, 0), &artist, &title);
+    split(title, from_top(FONT_SPACE, 0), &album, &title);
     draw_text(surface, &artist, record->artist,
               big_font, text_col, background_col);
+    draw_text(surface, &album, record->album,
+              font, text_col, background_col);
 
     /* Layout changes slightly if BPM is known */
 
@@ -704,7 +715,7 @@ static void draw_spinner(SDL_Surface *surface, const struct rect *rect,
     remain = player_get_remain(pl);
 
     rps = timecoder_revs_per_sec(pl->timecoder);
-    rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
+    rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;       
 
     int timeCode = timecoder_get_position(pl->timecoder, NULL);
     SDL_Event scrollEvent;
@@ -1130,7 +1141,15 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
 
     position = player_get_elapsed(pl) * t->rate;
 
-    split(*rect, from_top(FONT_SPACE + BIG_FONT_SPACE, 0), &track, &rest);
+   /* if (deck->record->status != RECORD_PLAYED){
+        if (position > 0)
+           // we'd like to set the status to played here.
+           // wont work, error: assignment of member 'status' in read-only object
+           // trying with function call.
+            record_set_played(deck->record);
+    }*/
+
+    split(*rect, from_top(FONT_SPACE + FONT_SPACE + BIG_FONT_SPACE, 0), &track, &rest);
     if (rest.h < 160)
         rest = *rect;
     else
@@ -1233,6 +1252,58 @@ static void draw_search(SDL_Surface *surface, const struct rect *rect,
     draw_text(surface, &rtext, cm, em_font, detail_col, background_col);
 }
 
+
+static void QuickBlit(SDL_Surface *srcSurface, SDL_Surface *dstSurface,
+                      const struct rect *rect)
+{
+    SDL_Rect src, dst;
+
+    src.x = 0;
+    src.y = 0;
+    src.w = rect->w;
+    src.h = rect->h;
+
+    dst.x = rect->x;
+    dst.y = rect->y;
+    
+    SDL_BlitSurface(srcSurface, &src, dstSurface, &dst);
+}
+
+/*
+    Draw Albumart
+*/
+
+static void draw_albumart(SDL_Surface *surface, const struct rect *rect, struct selector *sel)
+{
+    SDL_Surface *image;
+    SDL_PixelFormat fmt;
+    int slashpos;
+    char albumart[300] = "";
+    FILE *file;
+
+
+    fmt = *(surface->format);
+    /* Create new blank SDL surface to overwrite album art */
+    image = SDL_CreateRGBSurface(SDL_SWSURFACE, ALBUMART_WIDTH, ALBUMART_WIDTH * 2,
+                                 fmt.BitsPerPixel,
+                                 fmt.Rmask, fmt.Gmask, fmt.Bmask, fmt.Amask);
+    QuickBlit(image, surface, rect);
+
+    if (selector_current(sel) != NULL){
+        char *status =  selector_current(sel)->pathname;
+        slashpos = strrchr(status, '/') - status;
+        strncpy(albumart, status, slashpos + 1);
+        strcat(albumart, "folder.jpg");
+        if (file = fopen(albumart, "r")) {
+            fclose(file);
+            image = IMG_Load(albumart);
+            fprintf(stderr, "Loaded albumart %s\n", albumart);
+        }
+    }
+    QuickBlit(image, surface, rect);
+}
+
+
 /*
  * Draw a vertical scroll bar representing our view on a list of the
  * given number of entries
@@ -1309,6 +1380,7 @@ static void draw_listbox(const struct listbox *lb, SDL_Surface *surface,
 
 static void draw_crate_row(const void *context,
                            SDL_Surface *surface, const struct rect rect,
+
                            unsigned int entry, bool selected)
 {
     const struct selector *selector = context;
@@ -1322,9 +1394,20 @@ static void draw_crate_row(const void *context,
         col = detail_col;
     else
         col = text_col;
+    char* crateName = crate->name;
+    int len = strlen(crateName);
+    if (endsWith(crateName, ".xwaxpls"))
+    {
+        crateName[len-8] = 0;
+    }
+    if (endsWith(crateName, ".m3u"))
+    {
+        crateName[len-4] = 0;
+    }
+
 
     if (!selected) {
-        draw_text(surface, &rect, crate->name, font, col, background_col);
+        draw_text(surface, &rect, crateName, font, col, background_col);
         return;
     }
 
@@ -1335,8 +1418,16 @@ static void draw_crate_row(const void *context,
         draw_token(surface, &right, "ART", text_col, artist_col, selected_col);
         break;
 
+    case SORT_ALBUM:
+        draw_token(surface, &right, "ALB", text_col, album_col, selected_col);
+        break;
+
     case SORT_BPM:
         draw_token(surface, &right, "BPM", text_col, bpm_col, selected_col);
+        break;
+
+    case SORT_GENRE:
+        draw_token(surface, &right, "GEN", text_col, genre_col, selected_col);
         break;
 
     case SORT_PLAYLIST:
@@ -1353,7 +1444,7 @@ static void draw_crate_row(const void *context,
                    dim(alert_col, 2), selected_col);
     }
 
-    draw_text(surface, &left, crate->name, font, col, selected_col);
+    draw_text(surface, &left, crateName, font, col, selected_col);
 }
 
 /*
@@ -1374,18 +1465,32 @@ static void draw_record_row(const void *context,
     struct record *record;
     const struct index *index = context;
     struct rect left, right;
-    SDL_Color col;
-
-    if (selected)
-        col = selected_col;
-    else
-        col = background_col;
+    SDL_Color col = background_col;
+    SDL_Color col_text = text_col;
 
     width = rect.w / 2;
     if (width > RESULTS_ARTIST_WIDTH)
         width = RESULTS_ARTIST_WIDTH;
 
     record = index->record[entry];
+    switch (record->status) {
+        case RECORD_NOT_PLAYED:
+            col_text = text_col;
+            col = background_col;
+            break;
+
+        case RECORD_LOADED:
+            col_text = playedtext_col;
+            col = background_col;
+            break;
+
+        case RECORD_PLAYED:
+            col_text = playedtext_col;
+            col = playedbg_col;
+            break;
+    }
+    if (selected)
+        col = selected_col;
 
     split(rect, from_left(BPM_WIDTH, 0), &left, &right);
     draw_bpm_field(surface, &left, record->bpm, col);
@@ -1394,11 +1499,20 @@ static void draw_record_row(const void *context,
     draw_rect(surface, &left, col);
 
     split(right, from_left(width, 0), &left, &right);
-    draw_text(surface, &left, record->artist, font, text_col, col);
+    draw_text(surface, &left, record->artist, font, col_text, col);
 
     split(right, from_left(SPACER, 0), &left, &right);
     draw_rect(surface, &left, col);
-    draw_text(surface, &right, record->title, font, text_col, col);
+    draw_text(surface, &right, record->title, font, col_text, col);
+
+    // Kenny ADDED:
+    split(right, from_left(width * 2, 0), &left, &right);
+    draw_rect(surface, &right, col);
+    draw_text(surface, &right, record->album, font, col_text, col);
+
+    split(right, from_left(width*1.5, 0), &left, &right);
+    draw_rect(surface, &right, col);
+    draw_text(surface, &right, record->genre, font, col_text, col);
 }
 
 /*
@@ -1420,31 +1534,36 @@ static void draw_index(SDL_Surface *surface, const struct rect rect,
 static void draw_library(SDL_Surface *surface, const struct rect *rect,
                          struct selector *sel)
 {
-    struct rect rsearch, rlists, rcrates, rrecords;
-    unsigned int rows;
+    struct rect rsearch, rlists, rcrates, rrecords, ralbumart;
+    unsigned int rows_rec, rows_crate;
 
     split(*rect, from_top(SEARCH_HEIGHT, SPACER), &rsearch, &rlists);
 
-    rows = count_rows(rlists, FONT_SPACE);
-    if (rows == 0) {
+    rows_rec = count_rows(rlists, FONT_SPACE);
+    if (rows_rec == 0) {
 
         /* Hide the selector: draw nothing, and make it a 'virtual'
          * one row selector. This is enough to use it from the search
          * field and status only */
 
         draw_search(surface, rect, sel);
-        selector_set_lines(sel, 1);
+        selector_set_lines(sel, 1, 1);
 
         return;
     }
 
     draw_search(surface, &rsearch, sel);
-    selector_set_lines(sel, rows);
 
     split(rlists, columns(0, 4, SPACER), &rcrates, &rrecords);
+
+    split(rcrates, from_bottom(ALBUMART_HEIGHT, 10), &rcrates, &ralbumart);
+    rows_crate = count_rows(rcrates, FONT_SPACE);
+    selector_set_lines(sel, rows_crate,rows_rec);
+
     if (rcrates.w > LIBRARY_MIN_WIDTH) {
         draw_index(surface, rrecords, sel);
         draw_crates(surface, rcrates, sel);
+        draw_albumart(surface, &ralbumart, sel);
     } else {
         draw_index(surface, *rect, sel);
     }
@@ -2009,4 +2128,15 @@ void interface_stop(void)
 
     TTF_Quit();
     SDL_Quit();
+}
+
+int endsWith(const char *str, const char *suffix)
+{
+    if (!str || !suffix)
+        return 0;
+    size_t lenstr = strlen(str);
+    size_t lensuffix = strlen(suffix);
+    if (lensuffix >  lenstr)
+        return 0;
+    return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
