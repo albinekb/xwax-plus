@@ -767,7 +767,8 @@ static void draw_spinner(SDL_Surface *surface, const struct rect *rect,
     //printf("debug:\ntimeCode: %d\nmarker: %d\noAngle: %d\needleOffRecord: %d\ndiff: %d\nmarker-rangle: %d\n", timeCode, *marker, *oldAngle, *needleOffRecord, abs(rangle - *oldAngle), abs( *marker - rangle ));
 
     bool needleInScrollArea = timeCode > pl->timecoder->def->safe - 150000 && timeCode < pl->timecoder->def->safe;
-        
+    bool crateScroll = timeCode > pl->timecoder->def->safe - 75000 && timeCode < pl->timecoder->def->safe;
+          
     // if we are inside scroll area
     if( ( timeCode == -1 && pl->timecoder->trackSelectMode == true) || ( needleInScrollArea ) ){
 
@@ -784,41 +785,44 @@ static void draw_spinner(SDL_Surface *surface, const struct rect *rect,
         // if we already were inside before
         if( pl->timecoder->trackSelectMode ){
 
-                // if the angle moved is large enough
-            if( *needleOffRecord < 10 && abs( *marker - rangle ) > 200 ){
+                // if the angle moved is large enough -> 14 selector movements per rotation
+            if( *needleOffRecord < 10 && abs( *marker - rangle ) > 1023/14 ){
 
                 *marker = rangle;
                 scrollEvent.type = SDL_KEYDOWN;
                 scrollEvent.key.keysym.sym = SDLK_DOWN;
-               /*if (crateScroll){                
+                if (crateScroll)               
                     scrollEvent.key.keysym.sym = SDLK_RIGHT;
-                }*/
+                
 
                     // if we are going backwards
                 if(!pl->timecoder->forwards){
                    // printf("were goin backwards!\n");
                     scrollEvent.key.keysym.sym = SDLK_UP;
-                    /*if (crateScroll){                
+                    if (crateScroll)                
                         scrollEvent.key.keysym.sym = SDLK_LEFT;
-                    }*/
+                    
+                }
+            }else if ( /* pl->timecoder->trackSelectMode */ *needleOffRecord > 100 ) {
+                // we are not in the scroll area but just were
+                // if needle hasnt moved for 100 frames or was lifted for that time
+
+                pl->timecoder->trackSelectMode = false;
+                scrollEvent.type = SDL_KEYDOWN;
+                scrollEvent.key.keysym.sym = SDLK_F1;
+                if (deckID == 1){
+                    scrollEvent.key.keysym.sym = SDLK_F5;
                 }
             }
+
         }
         else{
             pl->timecoder->trackSelectMode = true;
             *marker = rangle;
         }
-    }else if ( pl->timecoder->trackSelectMode ) {
-        // we are not in the scroll area but just were
-
-        pl->timecoder->trackSelectMode = false;
-        scrollEvent.type = SDL_KEYDOWN;
-        scrollEvent.key.keysym.sym = SDLK_F1;
-        if (deckID == 1){
-            scrollEvent.key.keysym.sym = SDLK_F5;
-        }
     }
 
+    // if an event was set
     if ( scrollEvent.type == SDL_KEYDOWN )
         SDL_PushEvent(&scrollEvent);
     
