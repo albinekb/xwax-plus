@@ -25,6 +25,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <SDL.h>
+#include <SDL_events.h>
+#include <SDL_ttf.h>
+
 #include "device.h"
 #include "player.h"
 #include "track.h"
@@ -41,7 +45,7 @@
  * the timecode is greater than this value, recover by jumping
  * straight to the position given by the timecode. */
 
-#define SKIP_THRESHOLD (1.0 / 8) /* before dropping audio */
+#define SKIP_THRESHOLD (1.0 / 12) /* before dropping audio */
 
 /* The base volume level. A value of 1.0 leaves no headroom to play
  * louder when the record is going faster than 1.0. */
@@ -189,7 +193,7 @@ void player_set_timecoder(struct player *pl, struct timecoder *tc)
  * Post: player is initialised
  */
 
-void player_init(struct player *pl, unsigned int sample_rate,
+void player_init(struct player *pl,struct deck *deck, unsigned int sample_rate,
                  struct track *track, struct timecoder *tc)
 {
     assert(track != NULL);
@@ -209,6 +213,29 @@ void player_init(struct player *pl, unsigned int sample_rate,
     pl->pitch = 0.0;
     pl->sync_pitch = 1.0;
     pl->volume = 0.0;
+
+    pl->deck = deck;
+
+    pl->currentPitchSample = 0;
+    pl->pitchSampleAmount = 160;
+    pl->pitchSamples = { -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
+                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0
+                            };
+
 }
 
 /*
@@ -341,6 +368,8 @@ static int sync_to_timecode(struct player *pl)
     signed int timecode;
 
     timecode = timecoder_get_position(pl->timecoder, &when);
+
+    
 
     /* Instruct the caller to disconnect the timecoder if the needle
      * is outside the 'safe' zone of the record */
@@ -476,4 +505,26 @@ void player_collect(struct player *pl, signed short *pcm, unsigned samples)
 
     pl->position += r;
     pl->volume = target_volume;
+}
+
+// sample to achieve smoother bpm calculation according to pitch speed
+
+/*int i;
+for (i = 0; i < pitchSampleAmount, i++) {
+    pitchSamplesA[i] = -1.0;
+}*/
+double getAveragePitch(){
+    double sum = 0;
+    // in case the sample array isnt full yet
+    int amount = 0;
+    int i;
+    for ( i = 0; i < pitchSampleAmount; i++)
+    {
+        if ( pitchSamples[i] != -1.0 )
+        {
+            amount++;
+            sum += pitchSamples[i];
+        }
+    }
+    return sum/amount;
 }
