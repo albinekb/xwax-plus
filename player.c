@@ -494,16 +494,12 @@ void player_collect(struct player *pl, signed short *pcm, unsigned samples)
 
 // sample to achieve smoother bpm calculation according to pitch speed
 
-/*int i;
-for (i = 0; i < pitchSampleAmount, i++) {
-    pitchSamplesA[i] = -1.0;
-}*/
 double player_getAveragePitch(struct player *pl){
     double sum = 0;
     // in case the sample array isnt full yet
     double amount = 0;
     int i;
-    for ( i = 0; i < pl->pitchSampleAmount;; i++)
+    for ( i = 0; i < pl->pitchSampleAmount; i++)
     {
         if ( pl->pitchSamples[i] != -1.0 )
         {
