@@ -503,8 +503,7 @@ double player_getAveragePitch(struct player *pl){
     // in case the sample array isnt full yet
     double amount = 0;
     int i;
-    int j = pl->pitchSampleAmount;
-    for ( i = 0; i < j; i++)
+    for ( i = 0; i < pl->pitchSampleAmount;; i++)
     {
         if ( pl->pitchSamples[i] != -1.0 )
         {
