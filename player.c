@@ -218,24 +218,9 @@ void player_init(struct player *pl,struct deck *deck, unsigned int sample_rate,
 
     pl->currentPitchSample = 0;
     pl->pitchSampleAmount = 160;
-    pl->pitchSamples = { -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0, 
-                                -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0
-                            };
-
+    int i;
+    for(i = 0; i < pl->pitchSampleAmount; i++) 
+        pl->pitchSamples[i] = -1.0;
 }
 
 /*
@@ -513,17 +498,18 @@ void player_collect(struct player *pl, signed short *pcm, unsigned samples)
 for (i = 0; i < pitchSampleAmount, i++) {
     pitchSamplesA[i] = -1.0;
 }*/
-double getAveragePitch(){
+double player_getAveragePitch(struct player *pl){
     double sum = 0;
     // in case the sample array isnt full yet
-    int amount = 0;
+    double amount = 0;
     int i;
-    for ( i = 0; i < pitchSampleAmount; i++)
+    int j = pl->pitchSampleAmount;
+    for ( i = 0; i < j; i++)
     {
-        if ( pitchSamples[i] != -1.0 )
+        if ( pl->pitchSamples[i] != -1.0 )
         {
-            amount++;
-            sum += pitchSamples[i];
+            amount = amount + 1.0;
+            sum += pl->pitchSamples[i];
         }
     }
     return sum/amount;
