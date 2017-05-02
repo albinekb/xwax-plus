@@ -79,4 +79,5 @@ void player_recue(struct player *pl);
 
 void player_collect(struct player *pl, signed short *pcm, unsigned samples);
 
+double player_getAveragePitch(struct player *pl);
 #endif
