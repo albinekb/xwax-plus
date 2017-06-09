@@ -122,10 +122,6 @@ xwax:		LDFLAGS += -pthread
 
 interface.o:	CFLAGS += $(SDL_CFLAGS)
 
-timecoder.o:	CFLAGS += $(SDL_CFLAGS)
-
-player.o:	CFLAGS += $(SDL_CFLAGS)
-
 xwax.o:		CFLAGS += $(SDL_CFLAGS)
 xwax.o:		CPPFLAGS += $(DEVICE_CPPFLAGS)
 xwax.o:		CPPFLAGS += -DEXECDIR=\"$(EXECDIR)\" -DVERSION=\"$(VERSION)\"

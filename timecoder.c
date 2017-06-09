@@ -24,9 +24,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <SDL.h>
-#include <SDL_ttf.h>
-
 #include "debug.h"
 #include "timecoder.h"
 #include "selector.h"
