@@ -659,7 +659,7 @@ static void draw_bpm_field(SDL_Surface *surface, const struct rect *rect,
  */
 
 static void draw_record(SDL_Surface *surface, const struct rect *rect,
-                        const struct deck *deck)
+                        struct deck *deck)
 {
     struct rect artist, album, title, left, right;
     struct record *record = deck->record;
@@ -676,7 +676,17 @@ static void draw_record(SDL_Surface *surface, const struct rect *rect,
 
     if (show_bpm(record->bpm)) {
         split(title, from_left(BPM_WIDTH, 0), &left, &right);
-        draw_bpm(surface, &left, record->bpm * deck->player.pitch, background_col);
+
+        // take note of pitch so we can calculate the avarage later on
+        if (deck->player.currentPitchSample == deck->player.pitchSampleAmount)
+            deck->player.currentPitchSample = 0;
+        deck->player.pitchSamples[ deck->player.currentPitchSample ] = deck->player.pitch ;
+        //printf("index: %f, value: %d\n", pitchSamplesA[currentPitchSampleA], currentPitchSampleA );
+        deck->player.currentPitchSample++;
+
+        double nearest = roundf( player_getAveragePitch(&deck->player) * record->bpm * 10) / (record->bpm * 10);
+
+        draw_bpm(surface, &left, record->bpm * nearest, background_col);
 
         split(right, from_left(HALF_SPACER, 0), &left, &title);
         draw_rect(surface, &left, background_col);
@@ -1118,7 +1128,7 @@ static void draw_deck_status(SDL_Surface *surface,
         c += sprintf(c, "        ");
     }
 
-    sprintf(c, "pitch:%+0.2f (sync %0.2f %+.5fs = %+0.2f)  %s%s",
+    sprintf(c, "pitch:%+0.2f (sync %0.2f %+.5fs = %+0.5f)  %s%s",
             pl->pitch,
             pl->sync_pitch,
             pl->last_difference,
