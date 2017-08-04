@@ -249,14 +249,15 @@ static bool record_match_word(struct record *re, const char *match)
     } else {
             
         
-    if (strcasestr(re->artist, match) != NULL)
-        return true;
-    if (strcasestr(re->title, match) != NULL)
-        return true;
-    if (strcasestr(re->album, match) != NULL)
-        return true;
-    if (strcasestr(re->genre, match) != NULL)
-        return true;
+        if (strcasestr(re->artist, match) != NULL)
+            return true;
+        if (strcasestr(re->title, match) != NULL)
+            return true;
+        if (strcasestr(re->album, match) != NULL)
+            return true;
+        if (strcasestr(re->genre, match) != NULL)
+            return true;
+    }
     return false;
 }
 
