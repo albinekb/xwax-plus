@@ -825,10 +825,10 @@ static void draw_deck_clocks(SDL_Surface *surface, const struct rect *rect,
  */
 
 static void draw_overview(SDL_Surface *surface, const struct rect *rect,
-                          struct track *tr, int position)
+                          struct track *tr, int position, struct cues const* q)
 {
-    int x, y, w, h, r, c, sp, fade, bytes_per_pixel, pitch, height,
-        current_position;
+    int x, y, w, h, r, c, sp, sp_next, fade, bytes_per_pixel, pitch, height,
+       current_position, k;
     Uint8 *pixels, *p;
     SDL_Color col;
 
@@ -841,21 +841,34 @@ static void draw_overview(SDL_Surface *surface, const struct rect *rect,
     bytes_per_pixel = surface->format->BytesPerPixel;
     pitch = surface->pitch;
 
+    /* xwaxed: calculate the sample position for all cue points */
+    unsigned long cue_sps[MAX_CUES];
+
+    for (k = 0; k < MAX_CUES; k++) {
+        cue_sps[k] = cues_get(q, k) * tr->rate;
+    }
     if (tr->length)
         current_position = (long long)position * w / tr->length;
     else
         current_position = 0;
 
     for (c = 0; c < w; c++) {
-
+        bool cue_in_col = false;
         /* Collect the correct meter value for this column */
 
         sp = (long long)tr->length * c / w;
+        /* K.E.: changed (c + 1) to (c + 2) to get cue with 2 pixel width */
+        sp_next = (long long)tr->length * (c + 2) / w;
 
         if (sp < tr->length) /* account for rounding */
             height = track_get_overview(tr, sp) * h / 256;
         else
             height = 0;
+        /* check if there is a cuepoint in the column */
+        for (k = 0; k < MAX_CUES; k++) {
+            if (cue_sps[k] >= sp && cue_sps[k] <= sp_next)
+                cue_in_col = true;
+        }
 
         /* Choose a base colour to display in */
 
@@ -865,6 +878,14 @@ static void draw_overview(SDL_Surface *surface, const struct rect *rect,
         } else if (c == current_position) {
             col = needle_col;
             fade = 1;
+        /* K.E.: added condition with current_position + 1 to get needle indicator with 2 pixel width */
+        } else if (c == current_position + 1) {
+            col = needle_col;
+            fade = 1;
+        } else if (cue_in_col) {
+            col = cue_needle_col;
+        /* K.E.: changed fade to 0 to make cue points better visible */
+            fade = 0;
         } else if (position > tr->length - tr->rate * METER_WARNING_TIME) {
             col = alert_col;
             fade = 3;
@@ -907,9 +928,9 @@ static void draw_overview(SDL_Surface *surface, const struct rect *rect,
  */
 
 static void draw_closeup(SDL_Surface *surface, const struct rect *rect,
-                         struct track *tr, int position, int scale)
+                         struct track *tr, int position, int scale, struct cues const* q)
 {
-    int x, y, w, h, c;
+    int x, y, w, h, c, k;
     size_t bytes_per_pixel, pitch;
     Uint8 *pixels;
 
@@ -922,6 +943,13 @@ static void draw_closeup(SDL_Surface *surface, const struct rect *rect,
     bytes_per_pixel = surface->format->BytesPerPixel;
     pitch = surface->pitch;
 
+    /* xwaxed: calculate the sample position for all cue points */
+    unsigned long cue_sps[MAX_CUES];
+
+    for (k = 0; k < MAX_CUES; k++) {
+        cue_sps[k] = cues_get(q, k) * tr->rate;
+    }
+
     /* Draw in columns. This may seem like a performance hit,
      * but oprofile shows it makes no difference */
 
@@ -929,6 +957,7 @@ static void draw_closeup(SDL_Surface *surface, const struct rect *rect,
         int r, sp, height, fade;
         Uint8 *p;
         SDL_Color col;
+        bool cue_in_col = false;
 
         /* Work out the meter height in pixels for this column */
 
@@ -940,15 +969,29 @@ static void draw_closeup(SDL_Surface *surface, const struct rect *rect,
         else
             height = 0;
 
+       /* check if there is a cuepoint in the column */
+        for (k = 0; k < MAX_CUES; k++) {
+      /* K.E.: changed byte shift (1 << scale) to (2 << scale) to get cue points with 2 pixel width */
+            if (cue_sps[k] > sp && cue_sps[k] < sp + (2 << scale))
+                cue_in_col = true;
+        }
+
         /* Select the appropriate colour */
 
         if (c == w / 2) {
+             col = needle_col;
+             fade = 1;
+                    /* K.E.: added condition with (w / 2) + 1 to get needle indicator with 2 pixel width */
+        } else if (c == (w / 2) + 1) {
             col = needle_col;
             fade = 1;
-        } else {
-            col = elapsed_col;
-            fade = 3;
-        }
+        } else if (cue_in_col == true) {
+            col = cue_needle_col;
+            fade = 0;
+         } else {
+             col = elapsed_col;
+             fade = 3;
+         }
 
         /* Get a pointer to the top of the column, and increment
          * it for each row */
@@ -978,18 +1021,18 @@ static void draw_closeup(SDL_Surface *surface, const struct rect *rect,
  */
 
 static void draw_meters(SDL_Surface *surface, const struct rect *rect,
-                        struct track *tr, int position, int scale)
+    struct track *tr, int position, int scale, struct cues const* q)
 {
     struct rect overview, closeup;
 
     split(*rect, from_top(OVERVIEW_HEIGHT, SPACER), &overview, &closeup);
 
     if (closeup.h > OVERVIEW_HEIGHT)
-        draw_overview(surface, &overview, tr, position);
+        draw_overview(surface, &overview, tr, position, q);
     else
         closeup = *rect;
 
-    draw_closeup(surface, &closeup, tr, position, scale);
+    draw_closeup(surface, &closeup, tr, position, scale, q);
 }
 
 /*
@@ -1096,7 +1139,7 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
     else
         draw_deck_status(surface, &status, deck);
 
-    draw_meters(surface, &meters, t, position, meter_scale);
+    draw_meters(surface, &meters, t, position, meter_scale, &(deck->cues));
 }
 
 /*
