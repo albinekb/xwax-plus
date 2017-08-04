@@ -657,9 +657,10 @@ static void draw_bpm_field(SDL_Surface *surface, const struct rect *rect,
  */
 
 static void draw_record(SDL_Surface *surface, const struct rect *rect,
-                        const struct record *record)
+                        const struct deck *deck)
 {
     struct rect artist, album, title, left, right;
+    struct record *record = deck->record;
 
     split(*rect, from_top(BIG_FONT_SPACE, 0), &artist, &title);
 
@@ -673,7 +674,7 @@ static void draw_record(SDL_Surface *surface, const struct rect *rect,
 
     if (show_bpm(record->bpm)) {
         split(title, from_left(BPM_WIDTH, 0), &left, &right);
-        draw_bpm(surface, &left, record->bpm, background_col);
+        draw_bpm(surface, &left, record->bpm * deck->player.pitch, background_col);
 
         split(right, from_left(HALF_SPACER, 0), &left, &title);
         draw_rect(surface, &left, background_col);
@@ -1113,7 +1114,7 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
     if (rest.h < 160)
         rest = *rect;
     else
-        draw_record(surface, &track, deck->record);
+        draw_record(surface, &track, deck);
 
     split(rest, from_top(CLOCK_FONT_SIZE * 2, SPACER), &top, &lower);
     if (lower.h < 64)
@@ -1405,11 +1406,7 @@ static void draw_crate_row(const void *context,
                    dim(alert_col, 2), selected_col);
     }
 
-<<<<<<< HEAD
-    draw_text_in_locale(surface, &left, crate->name, font, col, selected_col);
-=======
-    draw_text(surface, &left, crateName, font, col, selected_col);
->>>>>>> added ".xwaxpls" and ".m3u" removals to crate list
+    draw_text_in_locale(surface, &left, crateName, font, col, selected_col);
 }
 
 /*
