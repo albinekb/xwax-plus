@@ -1548,11 +1548,13 @@ static bool handle_key(SDLKey key, SDLMod mod)
                     (void)player_toggle_timecode_control(pl);
                 }
                 break;
-            case FUNC_VINYLFLIP:
-                selector_down(sel);
-                re = selector_current(sel);
-                if (re != NULL)
-                    deck_load(de, re);
+            case FUNC_OTHER:
+                if (mod & KMOD_CTRL) { //next track through flip of vinyl or ctrl + f4/f8
+                    selector_down(sel);
+                    re = selector_current(sel);
+                    if (re != NULL)
+                        deck_load(de, re);
+                }
                 break;
             }
         }
@@ -1629,6 +1631,7 @@ int check_flip(struct timecoder *tc, int timeCode, int deckID){
             SDL_Event loadEvent;
             loadEvent.type = SDL_KEYDOWN;
             loadEvent.key.keysym.sym = SDLK_F4;
+            loadEvent.key.keysym.mod = KMOD_CTRL;
             if (deckID == 1){
                 loadEvent.key.keysym.sym = SDLK_F8;
             }
