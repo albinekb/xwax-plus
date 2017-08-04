@@ -104,7 +104,7 @@ DEPS = $(OBJS:.o=.d) $(TEST_OBJS:.o=.d) mktimecode.d
 # Rules
 
 .PHONY:		all
-all:		xwax mktimecode tests
+all:		xwax mktimecode
 
 # Dynamic versioning
 
@@ -121,6 +121,10 @@ xwax:		LDLIBS += $(SDL_LIBS) $(DEVICE_LIBS) -lm
 xwax:		LDFLAGS += -pthread
 
 interface.o:	CFLAGS += $(SDL_CFLAGS)
+
+timecoder.o:	CFLAGS += $(SDL_CFLAGS)
+
+player.o:	CFLAGS += $(SDL_CFLAGS)
 
 xwax.o:		CFLAGS += $(SDL_CFLAGS)
 xwax.o:		CPPFLAGS += $(DEVICE_CPPFLAGS)

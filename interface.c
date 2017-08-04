@@ -122,6 +122,7 @@
 #define FUNC_LOAD 0
 #define FUNC_RECUE 1
 #define FUNC_TIMECODE 2
+#define FUNC_VINYLFLIP 3
 
 /* Types of SDL_USEREVENT */
 
@@ -1042,7 +1043,7 @@ static void draw_deck_top(SDL_Surface *surface, const struct rect *rect,
 
 static void draw_deck_status(SDL_Surface *surface,
                              const struct rect *rect,
-                             const struct deck *deck)
+                             struct deck *deck, int deckID)
 {
     char buf[128], *c;
     int tc;
@@ -1053,6 +1054,18 @@ static void draw_deck_status(SDL_Surface *surface,
     c += sprintf(c, "%s: ", pl->timecoder->def->name);
 
     tc = timecoder_get_position(pl->timecoder, NULL);
+
+    if (check_flip(pl->timecoder,tc,deckID) == 1)
+    {
+        /* Flip detected. setting offsets for the corresponding sides */
+        if (pl->timecoder->sideA)
+        {
+            deck->player.offset = 24;
+        }else{
+            deck->player.offset = 8;
+        }
+    }
+
     if (pl->timecode_control && tc != -1) {
         c += sprintf(c, "%7d ", tc);
     } else {
@@ -1071,11 +1084,12 @@ static void draw_deck_status(SDL_Surface *surface,
 }
 
 /*
- * Draw a single deck
+ * Draw a single deck 
+ * TEST: Added Deck ID for reference
  */
 
 static void draw_deck(SDL_Surface *surface, const struct rect *rect,
-                      struct deck *deck, int meter_scale)
+                      struct deck *deck, int meter_scale, int deckID)
 {
     int position;
     struct rect track, top, meters, status, rest, lower;
@@ -1111,7 +1125,7 @@ static void draw_deck(SDL_Surface *surface, const struct rect *rect,
     if (meters.h < 64)
         meters = lower;
     else
-        draw_deck_status(surface, &status, deck);
+        draw_deck_status(surface, &status, deck, deckID);
 
     draw_meters(surface, &meters, t, position, meter_scale);
 }
@@ -1130,7 +1144,7 @@ static void draw_decks(SDL_Surface *surface, const struct rect *rect,
 
     for (d = 0; d < ndecks; d++) {
         split(right, columns(d, ndecks, BORDER), &left, &right);
-        draw_deck(surface, &left, &deck[d], meter_scale);
+        draw_deck(surface, &left, &deck[d], meter_scale, d);
     }
 }
 
@@ -1658,6 +1672,14 @@ static bool handle_key(SDLKey key, SDLMod mod)
                     (void)player_toggle_timecode_control(pl);
                 }
                 break;
+            case FUNC_OTHER:
+                if (mod & KMOD_CTRL) { //next track through flip of vinyl or ctrl + f4/f8
+                    selector_down(sel);
+                    re = selector_current(sel);
+                    if (re != NULL)
+                        deck_load(de, re);
+                }
+                break;
             }
         }
     }
@@ -1721,6 +1743,49 @@ static void defer_selector_redraw(struct observer *o, void *x)
     push_event(EVENT_SELECTOR);
 }
 
+
+
+int check_flip(struct timecoder *tc, int timeCode, int deckID){
+
+    if ( timeCode != -1 ){
+        if (tc->sniff_flip == true && tc->valid_counter > 25){
+            // looks like changing definitions helped.
+            tc->sniff_flip = false;
+            tc->sideA = !tc->sideA;
+            SDL_Event loadEvent;
+            loadEvent.type = SDL_KEYDOWN;
+            loadEvent.key.keysym.sym = SDLK_F4;
+            loadEvent.key.keysym.mod = KMOD_CTRL;
+            if (deckID == 1){
+                loadEvent.key.keysym.sym = SDLK_F8;
+            }
+
+            SDL_PushEvent(&loadEvent);
+            return 1;
+        }
+    }else{
+
+    // switching definitions (sides)
+
+        if (tc->lost_counter > 130)
+        {
+            tc->lost_counter = 0;
+
+            // weve been lost for a while, now. switch definitions.
+            tc->temp = tc->def;
+            tc->def = tc->def2;
+            tc->def2 = tc->temp;
+
+            // entering sniff flip mode, or exiting if switching timecode definitions
+            // still gives us an error streak
+            
+            tc->sniff_flip = !tc->sniff_flip;
+        }
+        return 0;
+    }
+
+}
+
 /*
  * The SDL interface thread
  */
@@ -1750,7 +1815,6 @@ static int interface_main(void)
     rig_lock();
 
     for (;;) {
-
         rig_unlock();
 
         if (SDL_WaitEvent(&event) < 0)
@@ -1853,7 +1917,6 @@ static int interface_main(void)
             UPDATE(surface, &rplayers);
             decks_update = false;
         }
-
     } /* main loop */
 
  finish:

@@ -24,8 +24,12 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <SDL.h>
+#include <SDL_ttf.h>
+
 #include "debug.h"
 #include "timecoder.h"
+#include "selector.h"
 
 #define ZERO_THRESHOLD (128 << 16)
 
@@ -280,14 +284,27 @@ static void init_channel(struct timecoder_channel *ch)
  */
 
 void timecoder_init(struct timecoder *tc, struct timecode_def *def,
-                    double speed, unsigned int sample_rate, bool phono)
+                    struct timecode_def *def2,double speed, unsigned int sample_rate, bool phono)
 {
     assert(def != NULL);
 
     /* A definition contains a lookup table which can be shared
      * across multiple timecoders */
-
     assert(def->lookup);
+
+    // ADDED STUFF FOR VINYL FLIP
+    char *serato_2b = "serato_2b";
+    bool flipMode = strcmp(def2->name, serato_2b) == 0;
+    if(flipMode){
+        printf("loading second definition!\n");
+        assert(def2->lookup);
+        tc->def2 = def2;
+    }
+    tc->sideA = true;
+    tc->sniff_flip = false;
+    tc->lost_counter = 0;
+    // TO HERE.
+
     tc->def = def;
     tc->speed = speed;
 
@@ -432,25 +449,32 @@ static void process_bitstream(struct timecoder *tc, signed int m)
      * the vinyl, regardless of the direction. */
 
     if (tc->forwards) {
-	tc->timecode = fwd(tc->timecode, tc->def);
-	tc->bitstream = (tc->bitstream >> 1)
-	    + (b << (tc->def->bits - 1));
+    	tc->timecode = fwd(tc->timecode, tc->def);
+    	tc->bitstream = (tc->bitstream >> 1)
+    	    + (b << (tc->def->bits - 1));
 
     } else {
-	bits_t mask;
+    	bits_t mask;
 
-	mask = ((1 << tc->def->bits) - 1);
-	tc->timecode = rev(tc->timecode, tc->def);
-	tc->bitstream = ((tc->bitstream << 1) & mask) + b;
+    	mask = ((1 << tc->def->bits) - 1);
+    	tc->timecode = rev(tc->timecode, tc->def);
+    	tc->bitstream = ((tc->bitstream << 1) & mask) + b;
     }
 
-    if (tc->timecode == tc->bitstream)
-	tc->valid_counter++;
+    if (tc->timecode == tc->bitstream){
+    	tc->valid_counter++;
+        // reset lost counter only when we had a streak of 13 fitting values
+        if (tc->valid_counter > 13)
+        {
+            tc->lost_counter = 0;
+        }
+    }
     else {
-	tc->timecode = tc->bitstream;
-	tc->valid_counter = 0;
+        // We didnt get what we were expecting.
+        tc->timecode = tc->bitstream;
+        tc->valid_counter = 0;
+        tc->lost_counter++;    
     }
-
     /* Take note of the last time we read a valid timecode */
 
     tc->timecode_ticker = 0;
@@ -585,7 +609,7 @@ void timecoder_submit(struct timecoder *tc, signed short *pcm, size_t npcm)
             secondary = left;
         }
 
-	process_sample(tc, primary, secondary);
+	    process_sample(tc, primary, secondary);
         update_monitor(tc, left, right);
 
         pcm += TIMECODER_CHANNELS;
