@@ -44,7 +44,7 @@
 
 /* Screen refresh time in milliseconds */
 
-#define REFRESH 10
+#define REFRESH 12
 
 /* Font definitions */
 
@@ -118,6 +118,7 @@
 #define FUNC_LOAD 0
 #define FUNC_RECUE 1
 #define FUNC_TIMECODE 2
+#define FUNC_SAVECUE 3
 
 /* Types of SDL_USEREVENT */
 
@@ -162,6 +163,8 @@ static SDL_Color background_col = {0, 0, 0, 255},
     detail_col = {128, 128, 128, 255},
     needle_col = {255, 255, 255, 255},
     artist_col = {16, 64, 0, 255},
+    /* K.E.: changed cue color to yellow to have cue points better visible */
+    cue_needle_col = {255, 255, 0, 255},
     bpm_col = {64, 16, 0, 255};
 
 static unsigned short *spinner_angle, spinner_size;
@@ -1407,10 +1410,12 @@ static bool handle_key(SDLKey key, SDLMod mod)
     struct selector *sel = &selector;
 
     if (key >= SDLK_a && key <= SDLK_z) {
+        deck_cue(&deck[0],0);
         selector_search_refine(sel, (key - SDLK_a) + 'a');
         return true;
 
     } else if (key >= SDLK_0 && key <= SDLK_9) {
+        deck_cue(&deck[0],2);
         selector_search_refine(sel, (key - SDLK_0) + '0');
         return true;
 
@@ -1533,6 +1538,9 @@ static bool handle_key(SDLKey key, SDLMod mod)
                 } else {
                     (void)player_toggle_timecode_control(pl);
                 }
+                break;
+            case FUNC_SAVECUE:
+                deck_save_cue(de);
                 break;
             }
         }
