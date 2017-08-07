@@ -1451,14 +1451,28 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
 static bool handle_key(SDLKey key, SDLMod mod)
 {
     struct selector *sel = &selector;
-
     if (key >= SDLK_a && key <= SDLK_z) {
-        deck_cue(&deck[0],0);
         selector_search_refine(sel, (key - SDLK_a) + 'a');
         return true;
 
     } else if (key >= SDLK_0 && key <= SDLK_9) {
-        deck_cue(&deck[0],2);
+        int cueNo = key - SDLK_0;
+        if (mod & KMOD_CTRL){
+            if (mod & KMOD_SHIFT){
+                deck_unset_cue(&deck[0],cueNo);
+            }else{
+                deck_cue(&deck[0],cueNo);
+            }
+            return true;    
+        } 
+        else if (mod & KMOD_ALT){
+            if (mod & KMOD_SHIFT){
+                deck_unset_cue(&deck[1],cueNo);
+            }else{
+                deck_cue(&deck[1],cueNo);
+            }
+            return true;    
+        }
         selector_search_refine(sel, (key - SDLK_0) + '0');
         return true;
 
