@@ -350,7 +350,6 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
         if ( button == 0)
         {
             loadEvent.key.keysym.sym = SDLK_LEFT;
-            printf("BUTTON 0 .. LEFT\n");
         }
         if ( button == 1)
         {
@@ -360,7 +359,6 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
                 
             }else{
                 loadEvent.key.keysym.sym = SDLK_UP;
-                printf("BUTTON 1 .. UP\n");
                 
             }
         }
@@ -370,9 +368,7 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
             {
                 loadEvent.key.keysym.sym = SDLK_TAB;
                 loadEvent.key.keysym.mod = KMOD_CTRL;
-                //loadEvent.key.keysym.mod = KMOD_SHIFT;
-
-                /* code */
+                
             }else{
                 if (left)
                     loadEvent.key.keysym.sym = SDLK_F1;
@@ -391,14 +387,12 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
                 
             }else{
                 loadEvent.key.keysym.sym = SDLK_DOWN;
-                printf("BUTTON 3 .. DOWN\n");
                 
             }
         }
         if ( button == 4)
         {
             loadEvent.key.keysym.sym = SDLK_RIGHT;
-            printf("BUTTON 4 .. RIGHT\n");
         }
         SDL_PushEvent(&loadEvent);
         return;
