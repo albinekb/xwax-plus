@@ -31,12 +31,15 @@
 
 #include <stdlib.h>
 
+#include <SDL.h>
+
 #include "controller.h"
 #include "debug.h"
 #include "deck.h"
 #include "dicer.h"
 #include "midi.h"
 #include "realtime.h"
+#include "selector.h"
 
 #define NBUTTONS 5
 
@@ -288,7 +291,7 @@ static void set_led(led_t *led, unsigned char set, unsigned char clear)
 
 static void event_decoded(struct deck *d, led_t led[NBUTTONS],
                           unsigned char action, bool shift,
-                          unsigned char button, bool on)
+                          unsigned char button, bool on, bool left)
 {
     /* Always toggle the LED status */
 
@@ -301,26 +304,105 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
     /* FIXME: We assume that we are the only operator of the cue
      * points; we should change the LEDs via a callback from deck */
 
-    if (shift && on) {
+    if (shift && on && action != LOOP && action != ROLL ){
+        printf("action: %s\n", &action);
         deck_unset_cue(d, button);
         set_led(&led[button], 0, ON);
-    }
-
-    if (shift)
         return;
 
-    if (action == CUE && on) {
-        deck_cue(d, button);
-        set_led(&led[button], ON, 0);
     }
 
-    if (action == LOOP) {
+//    if (shift)
+
+    if (action == CUE && on) {
+        if (button == 4)
+        {
+            deck_save_cue(d);
+        }else{
+            if (shift) {
+                deck_unset_cue(d, button);
+                set_led(&led[button], 0, ON);
+            }else{
+                deck_cue(d, button);
+                set_led(&led[button], ON, 0);
+            }
+        }
+        return;
+    }
+    if (action == ROLL )
+    {
         if (on) {
             deck_punch_in(d, button);
             set_led(&led[button], ON, 0);
         } else {
             deck_punch_out(d);
         }
+        return;
+    }
+    if (action == LOOP && on) {
+      
+
+        SDL_Event loadEvent;
+        loadEvent.type = SDL_KEYDOWN;
+        loadEvent.key.keysym.sym = SDLK_ESCAPE;
+
+
+        if ( button == 0)
+        {
+            loadEvent.key.keysym.sym = SDLK_LEFT;
+            printf("BUTTON 0 .. LEFT\n");
+        }
+        if ( button == 1)
+        {
+            if (shift)
+            {
+                loadEvent.key.keysym.sym = SDLK_PAGEUP;
+                
+            }else{
+                loadEvent.key.keysym.sym = SDLK_UP;
+                printf("BUTTON 1 .. UP\n");
+                
+            }
+        }
+        if ( button == 2)
+        {
+            if (shift)
+            {
+                loadEvent.key.keysym.sym = SDLK_TAB;
+                loadEvent.key.keysym.mod = KMOD_CTRL;
+                //loadEvent.key.keysym.mod = KMOD_SHIFT;
+
+                /* code */
+            }else{
+                if (left)
+                    loadEvent.key.keysym.sym = SDLK_F1;
+                else
+                    loadEvent.key.keysym.sym = SDLK_F5;
+                
+            }
+            
+       // loadEvent.key.keysym.mod = KMOD_CTRL;
+        }
+        if ( button == 3)
+        {
+            if (shift)
+            {
+                loadEvent.key.keysym.sym = SDLK_PAGEDOWN;
+                
+            }else{
+                loadEvent.key.keysym.sym = SDLK_DOWN;
+                printf("BUTTON 3 .. DOWN\n");
+                
+            }
+        }
+        if ( button == 4)
+        {
+            loadEvent.key.keysym.sym = SDLK_RIGHT;
+            printf("BUTTON 4 .. RIGHT\n");
+        }
+        SDL_PushEvent(&loadEvent);
+        return;
+
     }
 }
 
@@ -333,7 +415,7 @@ static void event(struct dicer *d, unsigned char buf[3])
     struct deck *deck;
     led_t *led;
     unsigned char action, button;
-    bool on, shift;
+    bool on, shift, left;
 
     /* Ignore signal that the second controller is (un)plugged */
 
@@ -344,6 +426,7 @@ static void event(struct dicer *d, unsigned char buf[3])
     case 0x9a:
     case 0x9b:
     case 0x9c:
+        left = true;
         deck = d->left;
         led = d->left_led;
         action = buf[0] - 0x9a;
@@ -352,6 +435,7 @@ static void event(struct dicer *d, unsigned char buf[3])
     case 0x9d:
     case 0x9e:
     case 0x9f:
+        left = false;
         deck = d->right;
         led = d->right_led;
         action = buf[0] - 0x9d;
@@ -406,7 +490,7 @@ static void event(struct dicer *d, unsigned char buf[3])
           button, on ? "ON" : "OFF",
           deck);
 
-    event_decoded(deck, led, action, shift, button, on);
+    event_decoded(deck, led, action, shift, button, on, left);
 }
 
 static ssize_t pollfds(struct controller *c, struct pollfd *pe, size_t z)
