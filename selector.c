@@ -93,7 +93,7 @@ static void hunt_target(struct selector *s)
  * Return: the currently selected crate
  */
 
-static struct crate* current_crate(struct selector *sel)
+struct crate* current_crate(struct selector *sel)
 {
     int n;
 
