@@ -318,6 +318,8 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
         if (button == 4)
         {
             deck_save_cue(d);
+        }else if(button == 3){
+            deck_recue(d);
         }else{
             if (shift) {
                 deck_unset_cue(d, button);
