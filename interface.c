@@ -1391,11 +1391,8 @@ static void draw_crate_row(const void *context,
                    dim(alert_col, 2), selected_col);
     }
 
-<<<<<<< HEAD
-    draw_text_in_locale(surface, &left, crate->name, font, col, selected_col);
-=======
-    draw_text(surface, &left, crateName, font, col, selected_col);
->>>>>>> added ".xwaxpls" and ".m3u" removals to crate list
+
+    draw_text_in_locale(surface, &left, crateName, font, col, selected_col);
 }
 
 /*
