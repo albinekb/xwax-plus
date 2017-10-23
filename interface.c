@@ -174,6 +174,7 @@ static iconv_t utf;
 static pthread_t ph;
 static struct selector selector;
 static struct observer on_status, on_selector;
+static struct crate* crate2Edit;
 
 /*
  * Scale a dimension according to the current zoom level
@@ -1397,6 +1398,25 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
 }
 
 /*
+    handler for adding the selected track to the "marked" (not currently selected!) crate via Ctrl+Enter 
+
+*/
+static int handle_trackAdd(struct selector *sel){
+    char* toAdd = selector_current(sel)->title;
+    printf("Adding %s\n", toAdd);
+    struct crate* cr = current_crate(sel);
+    FILE *log = NULL;
+    log = fopen(cr->path, "w");
+    if (log == NULL)    {
+        printf("Error! can't open log file.");
+        return -1;
+    }
+    ;
+    fprintf(log, "you bought %s.\n", toAdd);
+    fclose(log);
+}
+
+/*
  * Handle a single key event
  *
  * Return: true if the selector needs to be redrawn, otherwise false
@@ -1466,6 +1486,30 @@ static bool handle_key(SDLKey key, SDLMod mod)
                 selector_toggle_order(sel);
         } else {
             selector_toggle(sel);
+        }
+        return true;
+
+    }else if (key == SDLK_RETURN) {
+        if (mod & KMOD_CTRL)
+        {
+            if (crate2Edit == NULL)
+            {
+                crate2Edit = current_crate(sel);
+                printf("setting %s as crate to edit\n", crate2Edit->path);
+                /*char *dot = strrchr(crate2Edit->path, '.');
+                if (!dot && strcmp(dot, ".xwaxpls"))
+                {
+                    crate2Edit = NULL;
+                    printf("changed back to NULL.\n");
+                }*/
+            }else{
+                printf("deselecting crate from edit.\n");
+                crate2Edit = NULL;
+            }
+            // TOOGLE LIST EDIT
+        }else{
+            // ADD CURRENT TRACK TO SELECTED LIST 
+            handle_trackAdd(sel);
         }
         return true;
 
