@@ -112,6 +112,11 @@ void deck_load(struct deck *d, struct record *record)
 
     d->record = record;
     player_set_track(&d->player, t); /* passes reference */
+    double p = cues_get(&d->cues, 0);
+    if (p != CUE_UNSET)
+    {
+        player_seek_to(&d->player, p);
+    }
 }
 
 void deck_recue(struct deck *d)
