@@ -70,4 +70,6 @@ void selector_rescan(struct selector *sel);
 void selector_search_expand(struct selector *sel);
 void selector_search_refine(struct selector *sel, char key);
 
+struct crate* current_crate(struct selector *sel);
+
 #endif
