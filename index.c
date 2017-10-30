@@ -257,6 +257,7 @@ static bool record_match_word(struct record *re, const char *match)
         return true;
     if (strcasestr(re->genre, match) != NULL)
         return true;
+}
     return false;
 }
 
