@@ -746,13 +746,11 @@ static void draw_spinner(SDL_Surface *surface, const struct rect *rect,
     rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
     //printf("rangle: %d\n", rangle);
 
-
     int timeCode = timecoder_get_position(pl->timecoder, NULL);
     SDL_Event scrollEvent;
     scrollEvent.type = SDL_MOUSEMOTION;
     int *marker, *oldAngle, *needleOffRecord = NULL;
     if ( deckID == 1 ){
-
         marker = &pl->timecoder->scrollCheck_marker_2;
         oldAngle = &pl->timecoder->oldAngle_2;
         needleOffRecord = &pl->timecoder->needleOffRecord_2;
