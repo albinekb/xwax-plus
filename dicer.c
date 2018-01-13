@@ -304,20 +304,26 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
     /* FIXME: We assume that we are the only operator of the cue
      * points; we should change the LEDs via a callback from deck */
 
-    if (shift && on && action != LOOP && action != ROLL ){
+    /* if (shift && on && action != LOOP && action != ROLL ){
         printf("action: %s\n", &action);
         deck_unset_cue(d, button);
         set_led(&led[button], 0, ON);
         return;
 
-    }
+    }*/
 
 //    if (shift)
 
     if (action == CUE && on) {
         if (button == 4)
         {
-            deck_save_cue(d);
+            if (shift)
+            {   
+                printf("PRESSED\n");
+                (void)player_toggle_timecode_control(&d->player);
+            }else{
+                deck_save_cue(d);
+            }
         }else if(button == 3){
             deck_recue(d);
         }else{
