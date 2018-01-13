@@ -50,8 +50,8 @@
 /* Font definitions */
 
 #define FONT "DejaVuSans.ttf"
-#define FONT_SIZE 10
-#define FONT_SPACE 15
+#define FONT_SIZE 15
+#define FONT_SPACE 17
 
 #define EM_FONT "DejaVuSans-Oblique.ttf"
 
@@ -67,7 +67,7 @@
 
 #define DETAIL_FONT "DejaVuSansMono-Bold.ttf"
 #define DETAIL_FONT_SIZE 9
-#define DETAIL_FONT_SPACE 12
+#define DETAIL_FONT_SPACE 10
 
 /* Screen size (pixels) */
 
@@ -1591,18 +1591,27 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
 
 */
 static int handle_trackAdd(struct selector *sel){
-    struct record* toAdd = selector_current(sel);
-    //printf("Adding %s - %s to %s\n", toAdd->artist, toAdd->title, crate2Edit->path);
-    FILE *crateFile = NULL;
-    crateFile = fopen(crate2Edit->path, "a");
-    if (crateFile == NULL)    {
-        printf("Error! can't open crate file.");
-        return -1;
+    if (endsWith(crate2Edit->path, ".xwaxpls") == 1 || endsWith(crate2Edit->path, ".m3u") == 1)
+    {
+        struct record* toAdd = selector_current(sel);
+        printf("Adding %s - %s to %s\n", toAdd->artist, toAdd->title, crate2Edit->path);
+        FILE *crateFile = NULL;
+        crateFile = fopen(crate2Edit->path, "a");
+        if (crateFile == NULL)    {
+            printf("Error! can't open crate file.");
+            return -1;
+        }
+        if (endsWith(crate2Edit->path, ".xwaxpls"))
+        {
+            fprintf(crateFile, "%s\t%s\t%s\t%s\t%s\t%f\n", toAdd->pathname, toAdd->artist, toAdd->title, toAdd->album, toAdd->genre, toAdd->bpm);
+        }else if (endsWith(crate2Edit->path, ".m3u")){
+            fprintf(crateFile, "%s\n", toAdd->pathname);    
+        }
+        fclose(crateFile);
+        library_rescan(sel->library, crate2Edit);
+        return 1;
     }
-    fprintf(crateFile, "%s\t%s\t%s\t%f\n", toAdd->pathname, toAdd->artist, toAdd->title, toAdd->bpm);
-    fclose(crateFile);
-    library_rescan(sel->library, crate2Edit);
-    return 1;
+    return 0;
 }
 
 /*
@@ -1699,15 +1708,17 @@ static bool handle_key(SDLKey key, SDLMod mod)
         {
             if (crate2Edit == NULL)
             {
-                if (endsWith(current_crate(sel)->path, ".xwaxpls"))
+                if (endsWith(current_crate(sel)->path, ".xwaxpls") || endsWith(current_crate(sel)->path, ".m3u"))
                     crate2Edit = current_crate(sel);
             }else{
                 crate2Edit = NULL;
             }
         }else{
             // ADD CURRENT TRACK TO SELECTED LIST 
-            if (crate2Edit != NULL)
+            if (crate2Edit != NULL){
+                printf("Adding track.\n");
                 handle_trackAdd(sel);
+            }
         }
         return true;
 
