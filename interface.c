@@ -1433,6 +1433,7 @@ static int handle_trackAdd(struct selector *sel){
         return 1;
     }
     return 0;
+
 }
 
 /*
@@ -1514,16 +1515,15 @@ static bool handle_key(SDLKey key, SDLMod mod)
             if (crate2Edit == NULL)
             {
                 if (endsWith(current_crate(sel)->path, ".xwaxpls") || endsWith(current_crate(sel)->path, ".m3u"))
+
                     crate2Edit = current_crate(sel);
             }else{
                 crate2Edit = NULL;
             }
         }else{
             // ADD CURRENT TRACK TO SELECTED LIST 
-            if (crate2Edit != NULL){
-                printf("Adding track.\n");
+            if (crate2Edit != NULL)
                 handle_trackAdd(sel);
-            }
         }
         return true;
 
