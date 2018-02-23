@@ -1,0 +1,175 @@
+#!/usr/bin/env python2
+
+# encoding:utf8
+
+# An xwax scan script
+
+# for use:
+#   - xwax (as scanner)
+#   - independently as an .xwaxpls file generator
+# able to parse folders, files and playlists
+#
+# By: David Allan
+#     Kenneth Allan
+#
+
+import sys,os,re
+from mutagen.easyid3 import EasyID3
+from mutagen.flac import FLAC
+sys.path.append( "/home/tux/PyLib" )
+import optionparse
+from wichtig import *
+
+befehl = sys.argv[0]
+usage = """
+Call: %s
+Usage:	 
+    An xwax scan script
+
+    Uses:
+      - For xwax (as scanner)
+      - Independently as an .xwaxpls file (playlist with cache) generator.
+
+    passing an .xwaxpls file allows values to be directly read out of that file,
+    instead of scanning every songs tags in the list
+
+    Options:
+        -help  : Displays this
+        -debug : View Debug Output (use this if you experience any weird
+         behaviour)
+""" % befehl
+
+abb = '%(befehl)s: ABBRUCH '%locals()
+warnung = '%(befehl)s: WARNUNG: '%locals()
+
+opts, args = optionparse.parse( usage )
+
+if opts.help: # or len(args) != 0:
+    print usage
+    sys.exit(1)
+
+def parseFilename(file):
+    info = ""
+    base = os.path.basename(file)
+    guessedAlbum = file.split('/')[-2]
+    guessedPerformer = file.split('/')[-3]
+    #print guessedAlbum
+    vor,ext = os.path.splitext(base)
+    infoChunks = vor.split(' - ')
+
+    if infoChunks[0].isdigit():
+        infoChunks.pop(0)
+    lpieces =  len(infoChunks)
+
+    if lpieces == 1:
+        info = guessedPerformer + "\t" + infoChunks[0]
+    if lpieces == 2:
+    	if all(i.isdigit() or i ==" " for i in infoChunks[0] ):
+    		pieces[0] = guessedPerformer
+        info = infoChunks[0]+"\t"+ infoChunks[1]
+    if lpieces >= 3:
+        if opts.debug: 
+        	print >> sys.stderr, infoChunks
+        	print >> sys.stderr, "At least 3 parts of information found in filename. Not sure what to do. Truncing last one by default."
+        info = infoChunks[0]+"\t"+ infoChunks[1]
+    return info   +"  ("+guessedAlbum+")"
+
+# make list of files out of arguments
+files = list()
+for arg in args:
+    # if its a directory
+    print >> sys.stderr, 'Scanning ' + arg + '...'
+    if os.path.isdir( arg ):
+    	# TODO: handle whitespaces in folder names
+        aus, err = kommando2( ['find', arg , '-print'])
+        if err:
+            die(abb+'Problem with find %(arg)s'%locals() )
+        files.extend(aus.splitlines())
+
+    # if its a .m3u playlist
+    elif arg.endswith('.m3u'):
+        m3udir, m3ubase = os.path.split(arg)
+        fh = open(arg)
+        for line in fh.readlines():
+            if line.startswith('/'):
+                prefix = ''
+            else:
+                prefix = m3udir + "/"
+            if not line.startswith('#EXTINF'):
+                files.append(prefix + line)
+                
+        fh.close()
+        #print files
+    # if its a file
+    elif os.path.isfile(arg):
+        #print "["+arg+"]"
+        files.append( arg )
+    else:
+        die(abb+'Unknown file/dir '+arg)
+if opts.debug: print 'DEBUG: files = [%s]'%files
+
+# take note of bpmless tracks and display at end
+bpmless = []
+
+# run through files, using easyID3 
+#exts = 'agg oga aac cdaudio mp3 flac wav aif aiff wma'.split()
+exts = 'oga cdaudio mp3 flac wav aif aiff'.split()
+for currentFile in files:
+    currentFile = currentFile.strip()
+    #if not currentfile.beginsWith('#'):
+    #print >> sys.stderr, "["+currentFile+"]"
+    if not os.path.exists((currentFile)):
+        warn( warnung + currentFile + " does not exist! Check playlist for typos/Case issues")
+        continue
+    if currentFile.endswith('.xwaxpls'):
+        fh2=open(currentFile)
+        toread = fh2.read()
+        print toread 
+        fh2.close()
+    else:
+        vor,ext = os.path.splitext(currentFile)
+        ext = ext.replace('.','')
+        if ext in exts:
+            if opts.debug: print >> sys.stderr, 'DEBUG: currentFile = [%s]'%currentFile
+            if ext == 'flac':
+                try:
+                    audio = FLAC(currentFile)                  
+                except Exception as e:
+                    print 'Exception! ' + str(e)
+                    audio = FLAC()
+            else:
+                try:                  
+                    audio = EasyID3(currentFile)
+                except Exception as e:
+                    print 'Exception! ' + str(e)
+                    audio = EasyID3()
+            info = ''
+            if audio.get('artist'):
+                info += (audio.get('artist')[0].encode('ascii',errors='ignore') )
+            info += '\t' 
+            if audio.get('title'):
+                info += (audio.get('title')[0].encode('ascii',errors='ignore') )
+            info += '\t' 
+            if audio.get('album'):
+                info += (audio.get('album')[0].encode('ascii',errors='ignore') )
+            info += '\t' 
+            if audio.get('genre'):
+                info += (audio.get('genre')[0].encode('ascii',errors='ignore'))
+            info += '\t' 
+            if audio.get('bpm'):
+                info += audio.get('bpm')[0].encode('ascii',errors='ignore')
+            #if len( bpm ) <= 1 :
+            #    print >> sys.stderr, "No BPM information found in tags."
+            #    bpmless.append(currentFile)
+            #    continue
+            if opts.debug: print currentFile
+            #print 'WHAT THE FUCK'
+            print os.path.abspath(currentFile) + '\t' + info
+            #print >> sys.stderr, currentFile + '\t' + info #+ '\t' + bpm
+        else:
+            if opts.debug: warn( warnung+'Extension [%(ext)s] not supported'%locals() )
+        #print 'DEBUG ext = [%s]'%ext
+print >> sys.stderr,'Done.'
+#print >> sys.stderr,'------------------\nBPM-less tracks:'
+#print >> sys.stderr,('\n'.join('{}:  {}'.format(*k) for k in enumerate(bpmless)))
+        
