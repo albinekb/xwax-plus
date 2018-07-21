@@ -1,3 +1,46 @@
+eXwax
+=====
+
+eXwax (extended xwax) is a fork of xwax by Mark Hills, aiming to offer more features.
+most of these features reside in their respective branch.
+
+Currently implemented:
+
+- cue points:
+    displayed in waveforms. saveable and auto loads if present.
+    
+- novation dicer:
+    changed mapping, e.g. track browser navigation (details will follow)
+
+- live bpm-pitch:
+    bpm displays are no longer static
+
+- vinyl scroll:
+    use the last minute of your record as a scroll wheel to scroll through your track/crate list
+
+- vinyl flip:
+    flip your vinyl to load the following track.
+    
+- cover art display (ported from xwaxed):
+    displays cover art of currently selected track in browser
+                (both of these are currently in the ui_features branch)
+- extended track browser
+    added 'album' and 'genre' column + sorting functions
+    
+    
+... more to come.
+
+
+A Massive LARGE UP! to Mark Hills and all the xwax contributors for the time and effort put in to create such fantastic software.  
+Feel free to contact me for any improvments and ideas! I'm not a professional C coder, and would love to improve the source code. Some of it is a bit hacky!
+As well as the branches, please excuse the untidyness.
+
+Thank you.
+
+
+
+xwax disclaimer:
+
 xwax: Digital vinyl on Linux
 
 (C) Copyright 2018 Mark Hills <mark@xwax.org>
