@@ -6,15 +6,15 @@ If you wish to use several of the features create a new branch and merge the fea
 
 List of currently implemented features:
 
-- Cue points (Branch: dicer_stuff):
+- *Cue points* (Branch: dicer_stuff):
 
     Now displayed in waveforms. Saveable and auto loads if present.  
 
-- Novation Dicer (Branch: dicer_stuff):
+- **Novation Dicer** (Branch: dicer_stuff):
 
     Modified mapping, e.g. track browser navigation (details will follow)  
 
-- Live BPM-Pitch (Branch: bpm-pitch):
+- **Live BPM-Pitch** *(Branch: bpm-pitch):*
 
     BPM displays are no longer static
 
