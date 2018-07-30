@@ -7,7 +7,7 @@ Currently implemented:
 
 - Cue points (Branch: dicer_stuff):
 
-   Now displayed in waveforms. Saveable and auto loads if present.  
+    Now displayed in waveforms. Saveable and auto loads if present.  
 
 - Novation Dicer (Branch: dicer_stuff):
 
