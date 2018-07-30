@@ -11,27 +11,27 @@ Currently implemented:
 
 - Novation Dicer (Branch: dicer_stuff):
 
-   Modified mapping, e.g. track browser navigation (details will follow)  
+    Modified mapping, e.g. track browser navigation (details will follow)  
 
 - Live BPM-Pitch (Branch: bpm-pitch):
 
-   BPM displays are no longer static
+    BPM displays are no longer static
 
 - Vinyl Scroll (Branch: feature_scroll):
 
-   Use the last minute of the timecode signal on your record as a scroll wheel to scroll through your track/crate list
+    Use the last minute of the timecode signal on your record as a scroll wheel to scroll through your track/crate list
 
 - Vinyl Flip (Branch: feature_flip):
 
-   Flip your vinyl to load the following track.
+    Flip your vinyl to load the following track.
     
 - Cover art display (ported from xwaxed) (Branch: features_ui):
 
-   Displays cover art of currently selected track in browser
+    Displays cover art of currently selected track in browser
      
 - Extended track browser (Branch: features_ui):
 
-   Added 'album' and 'genre' column display + sorting functions
+    Added 'album' and 'genre' column display + sorting functions
     
     
 ... more to come.
