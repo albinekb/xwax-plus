@@ -8,14 +8,14 @@ Currently implemented:
 - Cue points (Branch: dicer_stuff):
 
    Now displayed in waveforms. Saveable and auto loads if present.
-    
+
 - Novation Dicer (Branch: dicer_stuff):
 
    Modified mapping, e.g. track browser navigation (details will follow)
 
 - Live BPM-Pitch (Branch: bpm-pitch):
 
-   bpm displays are no longer static
+   BPM displays are no longer static
 
 - Vinyl Scroll (Branch: feature_scroll):
 
@@ -45,7 +45,7 @@ Thank you.
 
 
 
-xwax disclaimer:
+## xwax disclaimer:
 
 xwax: Digital vinyl on Linux
 
