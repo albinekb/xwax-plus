@@ -1,4 +1,4 @@
-eXwax
+# eXwax
 =====
 
 eXwax (extended xwax) is a fork of xwax by Mark Hills, aiming to offer more features.
@@ -6,26 +6,26 @@ most of these features reside in their respective branch.
 
 Currently implemented:
 
-- cue points (Branch: dicer_stuff):
-    displayed in waveforms. saveable and auto loads if present.
+- Cue points (Branch: dicer_stuff):
+    Now displayed in waveforms. Saveable and auto loads if present.
     
-- novation dicer (Branch: dicer_stuff):
-    changed mapping, e.g. track browser navigation (details will follow)
+- Novation Dicer (Branch: dicer_stuff):
+    Modified mapping, e.g. track browser navigation (details will follow)
 
-- live bpm-pitch (Branch: bpm-pitch):
+- Live BPM-Pitch (Branch: bpm-pitch):
     bpm displays are no longer static
 
-- vinyl scroll (Branch: feature_scroll):
-    use the last minute of your record as a scroll wheel to scroll through your track/crate list
+- Vinyl Scroll (Branch: feature_scroll):
+    Use the last minute of the timecode signal on your record as a scroll wheel to scroll through your track/crate list
 
-- vinyl flip (Branch: feature_flip):
-    flip your vinyl to load the following track.
+- Vinyl Flip (Branch: feature_flip):
+    Flip your vinyl to load the following track.
     
-- cover art display (ported from xwaxed) (Branch: features_ui):
-    displays cover art of currently selected track in browser
-                (both of these are currently in the ui_features branch)
-- extended track browser (Branch: features_ui):
-    added 'album' and 'genre' column + sorting functions
+- Cover art display (ported from xwaxed) (Branch: features_ui):
+    Displays cover art of currently selected track in browser
+     
+- Extended track browser (Branch: features_ui):
+    Added 'album' and 'genre' column display + sorting functions
     
     
 ... more to come.
