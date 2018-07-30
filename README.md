@@ -6,25 +6,25 @@ most of these features reside in their respective branch.
 
 Currently implemented:
 
-- cue points:
+- cue points (Branch: dicer_stuff):
     displayed in waveforms. saveable and auto loads if present.
     
-- novation dicer:
+- novation dicer (Branch: dicer_stuff):
     changed mapping, e.g. track browser navigation (details will follow)
 
-- live bpm-pitch:
+- live bpm-pitch (Branch: bpm-pitch):
     bpm displays are no longer static
 
-- vinyl scroll:
+- vinyl scroll (Branch: feature_scroll):
     use the last minute of your record as a scroll wheel to scroll through your track/crate list
 
-- vinyl flip:
+- vinyl flip (Branch: feature_flip):
     flip your vinyl to load the following track.
     
-- cover art display (ported from xwaxed):
+- cover art display (ported from xwaxed) (Branch: features_ui):
     displays cover art of currently selected track in browser
                 (both of these are currently in the ui_features branch)
-- extended track browser
+- extended track browser (Branch: features_ui):
     added 'album' and 'genre' column + sorting functions
     
     
