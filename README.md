@@ -1,16 +1,16 @@
 # eXwax
 
 eXwax (**e**xtended **xwax**) is a fork of xwax, an amazing piece of software by Mark Hills, aiming to offer more features.
-Most of these features reside in their respective branch in this repository. and can be checked out and compiled.
+Most of these features reside in their respective branch in this repository and can be checked out and compiled.
 If you wish to use several of the features create a new branch and merge the features you want into that branch and compile.
 
 List of currently implemented features:
 
-- *Cue points* (Branch: dicer_stuff):
+- **Cue points** *(Branch: dicer_stuff):*
 
     Now displayed in waveforms. Saveable and auto loads if present.  
 
-- **Novation Dicer** (Branch: dicer_stuff):
+- **Novation Dicer** *(Branch: dicer_stuff):*
 
     Modified mapping, e.g. track browser navigation (details will follow)  
 
@@ -18,19 +18,19 @@ List of currently implemented features:
 
     BPM displays are no longer static
 
-- Vinyl Scroll (Branch: feature_scroll):
+- **Vinyl Scroll** *(Branch: feature_scroll):*
 
     Use the last minute of the timecode signal on your record as a scroll wheel to scroll through your track/crate list
 
-- Vinyl Flip (Branch: feature_flip):
+- **Vinyl Flip** *(Branch: feature_flip):*
 
     Flip your vinyl to load the following track.
     
-- Cover art display (ported from xwaxed) (Branch: features_ui):
+- **Cover art display** *(Branch: features_ui, ported from xwaxed):*
 
     Displays cover art of currently selected track in browser
      
-- Extended track browser (Branch: features_ui):
+- **Extended track browser** *(Branch: features_ui):*
 
     Added 'album' and 'genre' column display + sorting functions
     
@@ -39,7 +39,7 @@ List of currently implemented features:
 
 
 **A Massive LARGE UP! to Mark Hills and all the xwax contributors** for the time and effort put in to create such fantastic software.  
-Feel free to contact me for any improvments and ideas! I'm not a professional C coder, and would love to improve the source code. Some of it is a bit hacky!
+Feel free to contact me for any improvments and ideas! I'm not a professional C programmer, and would love to improve the source code. Some of it is a bit hacky!
 As well as the branches, please excuse the untidyness.
 
 Thank you.
