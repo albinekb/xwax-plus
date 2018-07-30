@@ -7,11 +7,11 @@ Currently implemented:
 
 - Cue points (Branch: dicer_stuff):
 
-   Now displayed in waveforms. Saveable and auto loads if present.
+   Now displayed in waveforms. Saveable and auto loads if present.  
 
 - Novation Dicer (Branch: dicer_stuff):
 
-   Modified mapping, e.g. track browser navigation (details will follow)
+   Modified mapping, e.g. track browser navigation (details will follow)  
 
 - Live BPM-Pitch (Branch: bpm-pitch):
 
