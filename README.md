@@ -1,9 +1,10 @@
 # eXwax
 
-eXwax (extended xwax) is a fork of xwax by Mark Hills, aiming to offer more features.
-most of these features reside in their respective branch.
+eXwax (**e**xtended **xwax**) is a fork of xwax, an amazing piece of software by Mark Hills, aiming to offer more features.
+Most of these features reside in their respective branch in this repository. and can be checked out and compiled.
+If you wish to use several of the features create a new branch and merge the features you want into that branch and compile.
 
-Currently implemented:
+List of currently implemented features:
 
 - Cue points (Branch: dicer_stuff):
 
@@ -37,7 +38,7 @@ Currently implemented:
 ... more to come.
 
 
-A Massive LARGE UP! to Mark Hills and all the xwax contributors for the time and effort put in to create such fantastic software.  
+**A Massive LARGE UP! to Mark Hills and all the xwax contributors** for the time and effort put in to create such fantastic software.  
 Feel free to contact me for any improvments and ideas! I'm not a professional C coder, and would love to improve the source code. Some of it is a bit hacky!
 As well as the branches, please excuse the untidyness.
 
