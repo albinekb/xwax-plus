@@ -357,8 +357,15 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
 
         if ( button == 0)
         {
-            loadEvent.key.keysym.sym = SDLK_LEFT;
             printf("BUTTON 0 .. LEFT\n");
+            loadEvent.key.keysym.sym = SDLK_LEFT;
+                
+            if (shift){
+                for (int i = 0; i < 5; i++)
+                {
+                    SDL_PushEvent(&loadEvent);
+                }
+            }
         }
         if ( button == 1)
         {
@@ -407,6 +414,13 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
         {
             loadEvent.key.keysym.sym = SDLK_RIGHT;
             printf("BUTTON 4 .. RIGHT\n");
+            if (shift)
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    SDL_PushEvent(&loadEvent);
+                }
+            }
         }
         SDL_PushEvent(&loadEvent);
         return;
