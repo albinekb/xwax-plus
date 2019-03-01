@@ -30,6 +30,7 @@
 
 #include "excrate.h"
 #include "external.h"
+#include "index.h"
 
 #define CRATE_ALL "All records"
 
@@ -63,7 +64,9 @@ void library_global_clear(void)
 void listing_init(struct listing *l)
 {
     index_init(&l->by_artist);
+    index_init(&l->by_album);
     index_init(&l->by_bpm);
+    index_init(&l->by_genre);
     index_init(&l->by_order);
     event_init(&l->addition);
 }
@@ -71,7 +74,9 @@ void listing_init(struct listing *l)
 void listing_clear(struct listing *l)
 {
     index_clear(&l->by_artist);
+    index_clear(&l->by_album);
     index_clear(&l->by_bpm);
+    index_clear(&l->by_genre);
     index_clear(&l->by_order);
     event_clear(&l->addition);
 }
@@ -273,12 +278,26 @@ struct record* listing_add(struct listing *l, struct record *r)
 
     if (index_reserve(&l->by_artist, 1) == -1)
         return NULL;
+    if (index_reserve(&l->by_album, 1) == -1)
+        return NULL;
     if (index_reserve(&l->by_bpm, 1) == -1)
+        return NULL;
+    if (index_reserve(&l->by_genre, 1) == -1)
         return NULL;
     if (index_reserve(&l->by_order, 1) == -1)
         return NULL;
 
     x = index_insert(&l->by_artist, r, SORT_ARTIST);
+    assert(x != NULL);
+    if (x != r)
+        return x;
+
+    x = index_insert(&l->by_album, r, SORT_ALBUM);
+    assert(x != NULL);
+    if (x != r)
+        return x;
+
+    x = index_insert(&l->by_genre, r, SORT_GENRE);
     assert(x != NULL);
     if (x != r)
         return x;
@@ -533,7 +552,7 @@ struct record* get_record(char *line)
 {
     int n;
     struct record *x;
-    char *field[4];
+    char *field[6];
 
     x = malloc(sizeof *x);
     if (!x) {
@@ -546,6 +565,26 @@ struct record* get_record(char *line)
     n = split(line, field, ARRAY_SIZE(field));
 
     switch (n) {
+    case 6:
+        // By Kenny: Added a new case for more detailed information
+        x->genre = field[4];
+
+    case 5:
+        // By Kenny: Added a new case for more detailed information
+        x->pathname = field[0];
+        x->artist = field[1];
+        x->title = field[2];
+        x->album = field[3];
+        x->genre = field[4];
+
+        x->bpm = parse_bpm(field[5]);
+        if (!isfinite(x->bpm)) {
+            fprintf(stderr, "%s: Ignoring malformed BPM '%s'\n",
+                    field[0], field[3]);
+            x->bpm = 0.0;
+        }
+        break;
+
     case 4:
         x->bpm = parse_bpm(field[3]);
         if (!isfinite(x->bpm)) {
@@ -571,7 +610,7 @@ struct record* get_record(char *line)
      * locale used for searching */
 
     x->match = matchable(x->artist, x->title);
-
+    x->status = RECORD_NOT_PLAYED;
     return x;
 
 bad:

@@ -38,7 +38,6 @@ EOF
 
 PREFIX=
 ALSA=true
-JACK=false
 OSS=false
 DEBUG=false
 PROFILE=false
