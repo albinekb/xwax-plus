@@ -66,7 +66,7 @@
 
 #define DETAIL_FONT "DejaVuSansMono-Bold.ttf"
 #define DETAIL_FONT_SIZE 9
-#define DETAIL_FONT_SPACE 12
+#define DETAIL_FONT_SPACE 10
 
 /* Screen size (pixels) */
 
@@ -174,6 +174,7 @@ static iconv_t utf;
 static pthread_t ph;
 static struct selector selector;
 static struct observer on_status, on_selector;
+static struct crate* crate2Edit;
 
 /*
  * Scale a dimension according to the current zoom level
@@ -754,7 +755,7 @@ static void draw_spinner(SDL_Surface *surface, const struct rect *rect,
     remain = player_get_remain(pl);
 
     rps = timecoder_revs_per_sec(pl->timecoder);
-    rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;
+    rangle = (int)(player_get_position(pl) * 1024 * rps) % 1024;       
 
     if (elapsed < 0 || remain < 0)
         col = alert_col;
@@ -1278,10 +1279,21 @@ static void draw_crate_row(const void *context,
         col = detail_col;
     else
         col = text_col;
+    char* crateName = crate->name;
+    int len = strlen(crateName);
+    if (endsWith(crateName, ".xwaxpls"))
+    {
+        crateName[len-8] = 0;
+    }
+    if (endsWith(crateName, ".m3u"))
+    {
+        crateName[len-4] = 0;
+    }
+
 
     if (!selected) {
-        draw_text_in_locale(surface, &rect, crate->name,
-                            font, col, background_col);
+
+        draw_text_in_locale(surface, &rect, crateName, font, col, background_col);
         return;
     }
 
@@ -1309,8 +1321,7 @@ static void draw_crate_row(const void *context,
         draw_token(surface, &right, "BUSY", text_col,
                    dim(alert_col, 2), selected_col);
     }
-
-    draw_text_in_locale(surface, &left, crate->name, font, col, selected_col);
+    draw_text_in_locale(surface, &left, crateName, font, col, selected_col);
 }
 
 /*
@@ -1408,6 +1419,34 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
 }
 
 /*
+    handler for adding the selected track to the "marked" (not currently selected!) crate via Ctrl+Enter 
+
+*/
+static int handle_trackAdd(struct selector *sel){
+    if (endsWith(crate2Edit->path, ".xwaxpls") == 1 || endsWith(crate2Edit->path, ".m3u") == 1)
+    {
+        struct record* toAdd = selector_current(sel);
+        printf("Adding %s - %s to %s\n", toAdd->artist, toAdd->title, crate2Edit->path);
+        FILE *crateFile = NULL;
+        crateFile = fopen(crate2Edit->path, "a");
+        if (crateFile == NULL)    {
+            printf("Error! can't open crate file.");
+            return -1;
+        }
+        if (endsWith(crate2Edit->path, ".xwaxpls"))
+        {
+            fprintf(crateFile, "%s\t%s\t%s\t%s\t%s\t%f\n", toAdd->pathname, toAdd->artist, toAdd->title, toAdd->album, toAdd->genre, toAdd->bpm);
+        }else if (endsWith(crate2Edit->path, ".m3u")){
+            fprintf(crateFile, "%s\n", toAdd->pathname);    
+        }
+        fclose(crateFile);
+        library_rescan(sel->library, crate2Edit);
+        return 1;
+    }
+    return 0;
+}
+
+/*
  * Handle a single key event
  *
  * Return: true if the selector needs to be redrawn, otherwise false
@@ -1477,6 +1516,25 @@ static bool handle_key(SDLKey key, SDLMod mod)
                 selector_toggle_order(sel);
         } else {
             selector_toggle(sel);
+        }
+        return true;
+    // Added return key handler to enable special crate edit and add tracks
+    }else if (key == SDLK_RETURN) {
+        if (mod & KMOD_CTRL)
+        {
+            if (crate2Edit == NULL)
+            {
+                if (endsWith(current_crate(sel)->path, ".xwaxpls") || endsWith(current_crate(sel)->path, ".m3u"))
+                    crate2Edit = current_crate(sel);
+            }else{
+                crate2Edit = NULL;
+            }
+        }else{
+            // ADD CURRENT TRACK TO SELECTED LIST 
+            if (crate2Edit != NULL){
+                printf("Adding track.\n");
+                handle_trackAdd(sel);
+            }
         }
         return true;
 
@@ -1684,7 +1742,10 @@ static int interface_main(void)
 
                 r = selector_current(&selector);
                 if (r != NULL) {
-                    status_set(STATUS_VERBOSE, r->pathname);
+                    char buf[200];
+                   // sprintf(buf, "%s%s%s%s", crate2Edit != NULL ? "EDITING: " : "",  crate2Edit != NULL ? crate2Edit->path : "",  crate2Edit != NULL ? "   " : "", r->pathname);
+                    //status_set(STATUS_VERBOSE, buf);
+                    status_printf(STATUS_VERBOSE,  "%s%s%s%s", crate2Edit != NULL ? "Editing Crate: " : "",  crate2Edit != NULL ? crate2Edit->path : "",  crate2Edit != NULL ? "   " : "", r->pathname);
                 } else {
                     status_set(STATUS_VERBOSE, "No search results found");
                 }
@@ -1929,4 +1990,15 @@ void interface_stop(void)
 
     TTF_Quit();
     SDL_Quit();
+}
+
+int endsWith(const char *str, const char *suffix)
+{
+    if (!str || !suffix)
+        return 0;
+    size_t lenstr = strlen(str);
+    size_t lensuffix = strlen(suffix);
+    if (lensuffix >  lenstr)
+        return 0;
+    return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
