@@ -32,7 +32,8 @@
 
 static const struct record no_record = {
     .artist = "",
-    .title = ""
+    .title = "",
+    .pathname = NULL
 };
 
 /*
@@ -104,9 +105,19 @@ void deck_load(struct deck *d, struct record *record)
     if (t == NULL)
         return;
 
+    
+/* xwaxed: get the cue points from file if possible */
+    fprintf(stdout, "Loading Cuepoints\n");
+    cues_load_from_file(&(d->cues), record->pathname);
+
     d->record = record;
     record->status = RECORD_LOADED;
     player_set_track(&d->player, t); /* passes reference */
+    double p = cues_get(&d->cues, 0);
+    if (p != CUE_UNSET)
+    {
+        player_seek_to(&d->player, p);
+    }
 }
 
 void deck_recue(struct deck *d)
@@ -187,4 +198,16 @@ void deck_punch_out(struct deck *d)
     e = player_get_elapsed(&d->player);
     player_seek_to(&d->player, e - d->punch);
     d->punch = NO_PUNCH;
+}
+/*
+ * xwaxed:
+ * save the cues for the current deck
+ */
+void deck_save_cue(struct deck *d)
+{
+    
+    fprintf(stdout, "Saving Cuepoints\n");
+    if (d->record->pathname) {
+        cues_save_to_file(&(d->cues), d->record->pathname);
+    }
 }

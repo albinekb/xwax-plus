@@ -37,8 +37,12 @@ void cues_reset(struct cues *q);
 
 void cues_unset(struct cues *q, unsigned int label);
 void cues_set(struct cues *q, unsigned int label, double position);
+void cues_load_from_file(struct cues *q, char const* pathname);
+void cues_save_to_file(struct cues *q, char const* pathname);
+char* replace_path_ext(char const* pathname);
 double cues_get(const struct cues *q, unsigned int label);
 double cues_prev(const struct cues *q, double current);
 double cues_next(const struct cues *q, double current);
+
 
 #endif

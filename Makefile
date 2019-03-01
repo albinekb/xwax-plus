@@ -120,6 +120,8 @@ xwax:		$(OBJS)
 xwax:		LDLIBS += $(SDL_LIBS) $(DEVICE_LIBS) -lm
 xwax:		LDFLAGS += -pthread
 
+dicer.o:	CFLAGS += $(SDL_CFLAGS)
+
 interface.o:	CFLAGS += $(SDL_CFLAGS)
 
 xwax.o:		CFLAGS += $(SDL_CFLAGS)
