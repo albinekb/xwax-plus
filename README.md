@@ -4,7 +4,7 @@ eXwax (**e**xtended **xwax**) is a fork of xwax, an amazing piece of software by
 Most of these features reside in their respective branch in this repository and can be checked out and compiled.
 If you wish to use several of the features create a new branch and merge the features you want into that branch and compile.
 
-List of currently implemented features:
+List of currently implemented features (Screenshot in the [wiki!](https://gitlab.com/K3nn3th/exwax/wikis/home)):
 
 - **Cue points** *(Branch: dicer_stuff):*
 
