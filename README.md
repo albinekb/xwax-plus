@@ -50,7 +50,7 @@ Thank you.
 
 xwax: Digital vinyl on Linux
 
-(C) Copyright 2018 Mark Hills <mark@xwax.org>
+(C) Copyright 2020 Mark Hills <mark@xwax.org>
 
 For installation instructions, see the INSTALL file. Instructions can
 be found in the xwax(1) man page and http://xwax.org/
