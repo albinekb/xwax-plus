@@ -293,6 +293,7 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
                           unsigned char action, bool shift,
                           unsigned char button, bool on, bool left)
 {
+    size_t i;
     /* Always toggle the LED status */
 
     if (on) {
@@ -361,7 +362,7 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
             loadEvent.key.keysym.sym = SDLK_LEFT;
                 
             if (shift){
-                for (int i = 0; i < 5; i++)
+                for (i = 0; i < 5; i++)
                 {
                     SDL_PushEvent(&loadEvent);
                 }
@@ -416,7 +417,7 @@ static void event_decoded(struct deck *d, led_t led[NBUTTONS],
             printf("BUTTON 4 .. RIGHT\n");
             if (shift)
             {
-                for (int i = 0; i < 5; i++)
+                for (i = 0; i < 5; i++)
                 {
                     SDL_PushEvent(&loadEvent);
                 }
