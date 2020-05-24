@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 # encoding:utf8
 
@@ -57,13 +57,13 @@ def parseFilename(file):
     if lpieces == 1:
         info = guessedPerformer + "\t" + infoChunks[0]
     if lpieces == 2:
-    	if all(i.isdigit() or i ==" " for i in infoChunks[0] ):
-    		pieces[0] = guessedPerformer
+        if all(i.isdigit() or i ==" " for i in infoChunks[0] ):
+            pieces[0] = guessedPerformer
         info = infoChunks[0]+"\t"+ infoChunks[1]
     if lpieces >= 3:
         if debug: 
-        	print >> sys.stderr, infoChunks
-        	print >> sys.stderr, "At least 3 parts of information found in filename. Not sure what to do. Truncing last one by default."
+            print(infoChunks, file=sys.stderr)
+            print("At least 3 parts of information found in filename. Not sure what to do. Truncing last one by default.", file=sys.stderr)
         info = infoChunks[0]+"\t"+ infoChunks[1]
     return info   +"  ("+guessedAlbum+")"
 
@@ -71,7 +71,7 @@ def parseFilename(file):
 files = list()
 for arg in args:
     # if its a directory
-    print >> sys.stderr, 'Scanning ' + arg + '...'
+    print('Scanning ' + arg + '...', file=sys.stderr)
     if os.path.isdir( arg ):
         listOfFiles = list()
         for (dirpath, dirnames, filenames) in os.walk(arg):
@@ -98,7 +98,7 @@ for arg in args:
         files.append( arg )
     else:
         die(abb+'Unknown file/dir '+arg)
-if debug: print 'DEBUG: files = [%s]'%files
+if debug: print(('DEBUG: files = [%s]'%files))
 
 # take note of bpmless tracks and display at end
 bpmless = []
@@ -116,51 +116,52 @@ for currentFile in files:
     if currentFile.endswith('.xwaxpls'):
         fh2=open(currentFile)
         toread = fh2.read()
-        print toread 
+        print(toread )
         fh2.close()
     else:
         vor,ext = os.path.splitext(currentFile)
         ext = ext.replace('.','')
         if ext in exts:
-            if debug: print >> sys.stderr, 'DEBUG: currentFile = [%s]'%currentFile
+            if debug: print('DEBUG: currentFile = [%s]'%currentFile, file=sys.stderr)
             if ext == 'flac':
                 try:
                     audio = FLAC(currentFile)                  
                 except Exception as e:
-                    print 'Exception! ' + str(e)
+                    print(('Exception! ' + str(e)))
                     audio = FLAC()
             else:
                 try:                  
                     audio = EasyID3(currentFile)
                 except Exception as e:
-                    print 'Exception! ' + str(e)
+                    print('Exception! ' + str(e))
                     audio = EasyID3()
             info = ''
             if audio.get('artist'):
-                info += (audio.get('artist')[0].encode('ascii',errors='ignore') )
+                info += (audio.get('artist')[0])
             info += '\t' 
             if audio.get('title'):
-                info += (audio.get('title')[0].encode('ascii',errors='ignore') )
+                info += (audio.get('title')[0])
             info += '\t' 
             if audio.get('album'):
-                info += (audio.get('album')[0].encode('ascii',errors='ignore') )
+                info += (audio.get('album')[0])
             info += '\t' 
             if audio.get('genre'):
-                info += (audio.get('genre')[0].encode('ascii',errors='ignore'))
+                info += (audio.get('genre')[0])
             info += '\t' 
             if audio.get('bpm'):
-                info += audio.get('bpm')[0].encode('ascii',errors='ignore')
+                print(audio.get('bpm')[0])
+                info += (audio.get('bpm')[0])
             #if len( bpm ) <= 1 :
             #    print >> sys.stderr, "No BPM information found in tags."
             #    bpmless.append(currentFile)
             #    continue
-            if debug: print currentFile
-            print os.path.abspath(currentFile) + '\t' + info
+            if debug: print(currentFile)
+            print(os.path.abspath(currentFile) + '\t' + info)
             #print >> sys.stderr, currentFile + '\t' + info #+ '\t' + bpm
         else:
             if debug: warn( warnung+'Extension [%(ext)s] not supported'%locals() )
         #print 'DEBUG ext = [%s]'%ext
-print >> sys.stderr,'Done.'
+print('Done.', file=sys.stderr)
 #print >> sys.stderr,'------------------\nBPM-less tracks:'
 #print >> sys.stderr,('\n'.join('{}:  {}'.format(*k) for k in enumerate(bpmless)))
         
