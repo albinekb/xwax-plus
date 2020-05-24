@@ -18,7 +18,6 @@ from mutagen.easyid3 import EasyID3
 from mutagen.flac import FLAC
 sys.path.append( "/home/tux/PyLib" )
 import optionparse
-from wichtig import *
 
 befehl = sys.argv[0]
 usage = """
@@ -80,11 +79,10 @@ for arg in args:
     # if its a directory
     print >> sys.stderr, 'Scanning ' + arg + '...'
     if os.path.isdir( arg ):
-    	# TODO: handle whitespaces in folder names
-        aus, err = kommando2( ['find', arg , '-print'])
-        if err:
-            die(abb+'Problem with find %(arg)s'%locals() )
-        files.extend(aus.splitlines())
+        listOfFiles = list()
+        for (dirpath, dirnames, filenames) in os.walk(arg):
+            listOfFiles += [os.path.join(dirpath, file) for file in filenames]
+        files.extend(listOfFiles)
 
     # if its a .m3u playlist
     elif arg.endswith('.m3u'):
