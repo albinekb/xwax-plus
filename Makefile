@@ -140,7 +140,7 @@ mktimecode:	LDLIBS  += -lm
 install:
 		$(INSTALL) -D xwax $(DESTDIR)$(BINDIR)/exwax
 		$(INSTALL) -D crate_scan $(DESTDIR)$(EXECDIR)/exwax-scan
-		$(INSTALL) -D import $(DESTDIR)$(EXECDIR)/import
+		$(INSTALL) -D import $(DESTDIR)$(EXECDIR)/exwax-import
 		$(INSTALL) -D -m 0644 xwax.1 $(DESTDIR)$(MANDIR)/man1/xwax.1
 		$(INSTALL) -D -m 0644 CHANGES $(DESTDIR)$(DOCDIR)/xwax/CHANGES
 		$(INSTALL) -D -m 0644 COPYING $(DESTDIR)$(DOCDIR)/xwax/COPYING
