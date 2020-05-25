@@ -4,7 +4,7 @@
 
 pkgname=exwax-git
 _name=exwax
-pkgver=1.7
+pkgver=1.6.beta2.31.g3f97662
 pkgrel=1
 pkgdesc='Open-source vinyl emulation software for Linux. Extended Version including interactive BPM display, Album and Genre Columns, Cover Art Display, Dicer Navigation, Cue display and saving'
 arch=('i686' 'x86_64')

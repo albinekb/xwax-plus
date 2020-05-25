@@ -52,13 +52,13 @@
 #define DEFAULT_PRIORITY 80
 
 #define DEFAULT_IMPORTER EXECDIR "/xwax-import"
-#define DEFAULT_SCANNER EXECDIR "/xwax-scan"
+#define DEFAULT_SCANNER EXECDIR "/exwax-scan"
 #define DEFAULT_TIMECODE "serato_2a"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
 
 char *banner = "xwax " VERSION \
-    " (C) Copyright 2018 Mark Hills <mark@xwax.org>";
+    " (C) Copyright 2020 Mark Hills <mark@xwax.org>";
 
 size_t ndeck;
 struct deck deck[3];
