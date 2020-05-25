@@ -144,7 +144,6 @@ install:
 		$(INSTALL) -D -m 0644 xwax.1 $(DESTDIR)$(MANDIR)/man1/xwax.1
 		$(INSTALL) -D -m 0644 CHANGES $(DESTDIR)$(DOCDIR)/xwax/CHANGES
 		$(INSTALL) -D -m 0644 COPYING $(DESTDIR)$(DOCDIR)/xwax/COPYING
-		$(INSTALL) -D -m 0644 README $(DESTDIR)$(DOCDIR)/xwax/README
 
 # Distribution archive from Git source code
 
