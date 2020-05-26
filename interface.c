@@ -187,6 +187,9 @@ static struct selector selector;
 static struct observer on_status, on_selector;
 static struct crate* crate2Edit;
 
+static bool st_display_art = true;
+static bool st_display_new_cols;
+
 /*
  * Scale a dimension according to the current zoom level
  *
@@ -1510,15 +1513,16 @@ static void draw_record_row(const void *context,
     draw_text_in_locale(surface, &right, record->title, font, col_text, col);
 
     // Kenny ADDED:
-    split(right, from_left(width * 2, 0), &left, &right);
-    draw_rect(surface, &right, col);
-    draw_text_in_locale(surface, &right, record->album, font, col_text, col);
+    if (st_display_new_cols == true){
+    	split(right, from_left(width * 2, 0), &left, &right);
+    	draw_rect(surface, &right, col);
+    	draw_text_in_locale(surface, &right, record->album, font, col_text, col);
 
-    split(right, from_left(width*1.5, 0), &left, &right);
-    draw_rect(surface, &right, col);
-    draw_text_in_locale(surface, &right, record->genre, font, col_text, col);
+    	split(right, from_left(width*1.5, 0), &left, &right);
+        draw_rect(surface, &right, col);
+        draw_text_in_locale(surface, &right, record->genre, font, col_text, col);
+    }
 }
-
 /*
  * Display a record library index, with scrollbar and current
  * selection
@@ -1531,7 +1535,7 @@ static void draw_index(SDL_Surface *surface, const struct rect rect,
 }
 
 /*
- * Display the music library, which consists of the query, and search
+ st_st_st_st_st_st_st_st_* Display the music library, which consists of the query, and search
  * results
  */
 
@@ -1560,14 +1564,18 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
 
     split(rlists, columns(0, 4, SPACER), &rcrates, &rrecords);
 
-    split(rcrates, from_bottom(ALBUMART_HEIGHT, 10), &rcrates, &ralbumart);
+    if (st_display_art == true){
+        split(rcrates, from_bottom(ALBUMART_HEIGHT, 10), &rcrates, &ralbumart);
+    }
     rows_crate = count_rows(rcrates, FONT_SPACE);
     selector_set_lines(sel, rows_crate,rows_rec);
 
     if (rcrates.w > LIBRARY_MIN_WIDTH) {
         draw_index(surface, rrecords, sel);
         draw_crates(surface, rcrates, sel);
-        draw_albumart(surface, &ralbumart, sel);
+	if (st_display_art == true){
+	    draw_albumart(surface, &ralbumart, sel);
+	}
     } else {
         draw_index(surface, *rect, sel);
     }
@@ -2077,9 +2085,11 @@ static int parse_geometry(const char *s)
  * error
  */
 
-int interface_start(struct library *lib, const char *geo, bool decor)
+int interface_start(struct library *lib, const char *geo, bool decor, bool display_art, bool display_new_cols)
 {
     size_t n;
+    st_display_art = display_art;
+    st_display_new_cols = display_new_cols;
 
     if (parse_geometry(geo) == -1) {
         fprintf(stderr, "Window geometry ('%s') is not valid.\n", geo);
