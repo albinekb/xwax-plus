@@ -183,6 +183,9 @@ static pthread_t ph;
 static struct selector selector;
 static struct observer on_status, on_selector;
 
+static bool display_art = true;
+//static bool display_new_cols;
+
 /*
  * Scale a dimension according to the current zoom level
  *
@@ -1504,14 +1507,18 @@ static void draw_library(SDL_Surface *surface, const struct rect *rect,
 
     split(rlists, columns(0, 4, SPACER), &rcrates, &rrecords);
 
-    split(rcrates, from_bottom(ALBUMART_HEIGHT, 10), &rcrates, &ralbumart);
+    //if (display_art){
+        split(rcrates, from_bottom(ALBUMART_HEIGHT, 10), &rcrates, &ralbumart);
+    //}
     rows_crate = count_rows(rcrates, FONT_SPACE);
     selector_set_lines(sel, rows_crate,rows_rec);
 
     if (rcrates.w > LIBRARY_MIN_WIDTH) {
         draw_index(surface, rrecords, sel);
         draw_crates(surface, rcrates, sel);
-        draw_albumart(surface, &ralbumart, sel);
+//	if (display_art){
+	    draw_albumart(surface, &ralbumart, sel);
+//	}
     } else {
         draw_index(surface, *rect, sel);
     }
@@ -1952,9 +1959,11 @@ static int parse_geometry(const char *s)
  * error
  */
 
-int interface_start(struct library *lib, const char *geo, bool decor)
+int interface_start(struct library *lib, const char *geo, bool decor, bool display_art, bool display_new_cols)
 {
     size_t n;
+    display_art = display_art;
+    display_new_cols = display_new_cols;
 
     if (parse_geometry(geo) == -1) {
         fprintf(stderr, "Window geometry ('%s') is not valid.\n", geo);
