@@ -1457,15 +1457,16 @@ static void draw_record_row(const void *context,
     draw_text_in_locale(surface, &right, record->title, font, col_text, col);
 
     // Kenny ADDED:
-    split(right, from_left(width * 2, 0), &left, &right);
-    draw_rect(surface, &right, col);
-    draw_text_in_locale(surface, &right, record->album, font, col_text, col);
+    if (st_display_new_cols == true){
+    	split(right, from_left(width * 2, 0), &left, &right);
+    	draw_rect(surface, &right, col);
+    	draw_text_in_locale(surface, &right, record->album, font, col_text, col);
 
-    split(right, from_left(width*1.5, 0), &left, &right);
-    draw_rect(surface, &right, col);
-    draw_text_in_locale(surface, &right, record->genre, font, col_text, col);
+    	split(right, from_left(width*1.5, 0), &left, &right);
+        draw_rect(surface, &right, col);
+        draw_text_in_locale(surface, &right, record->genre, font, col_text, col);
+    }
 }
-
 /*
  * Display a record library index, with scrollbar and current
  * selection
@@ -1478,7 +1479,7 @@ static void draw_index(SDL_Surface *surface, const struct rect rect,
 }
 
 /*
- * Display the music library, which consists of the query, and search
+ st_st_st_st_st_st_st_st_* Display the music library, which consists of the query, and search
  * results
  */
 
