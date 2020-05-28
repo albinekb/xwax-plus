@@ -87,6 +87,7 @@ static void usage(FILE *fd)
 
     fprintf(fd, "Interface Options:\n"
       "  --no-art	Hide album art display\n"
+      "  --no-bpm 	Hide BPM information\n"
       "  --no-new-cols	Hide 'Album' and 'Genre' Columns\n"
 		    );
 
@@ -191,7 +192,7 @@ int main(int argc, char *argv[])
     int rc = -1, n, priority;
     const char *scanner, *geo;
     char *endptr;
-    bool use_mlock, decor, display_new_cols, display_art;
+    bool use_mlock, decor, display_bpm, display_new_cols, display_art;
 
     struct library library;
 
@@ -236,6 +237,7 @@ int main(int argc, char *argv[])
     geo = "";
     decor = true;
     display_art = true;
+    display_bpm = true;
     display_new_cols = true;
     nctl = 0;
     priority = DEFAULT_PRIORITY;
@@ -540,6 +542,13 @@ int main(int argc, char *argv[])
             argv++;
             argc--;
 
+        } else if (!strcmp(argv[0], "--no-bpm")) {
+
+            display_bpm = false;
+
+            argv++;
+            argc--;
+
         } else if (!strcmp(argv[0], "--no-art")) {
 
             display_art = false;
@@ -647,7 +656,7 @@ int main(int argc, char *argv[])
         goto out_rt;
     }
 
-    if (interface_start(&library, geo, decor, display_art, display_new_cols) == -1)
+    if (interface_start(&library, geo, decor, display_bpm, display_art, display_new_cols) == -1)
         goto out_rt;
 
     if (rig_main() == -1)
