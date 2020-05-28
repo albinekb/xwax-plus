@@ -184,6 +184,7 @@ static struct selector selector;
 static struct observer on_status, on_selector;
 
 static bool st_display_art = true;
+static bool st_display_bpm = true;
 static bool st_display_new_cols;
 
 /*
@@ -608,7 +609,7 @@ static SDL_Color hsv(double h, double s, double v)
 
 static bool show_bpm(double bpm)
 {
-    return (bpm > 20.0 && bpm < 400.0);
+    return (bpm > 20.0 && bpm < 400.0 && st_display_bpm);
 }
 
 /*
@@ -1443,8 +1444,12 @@ static void draw_record_row(const void *context,
     if (selected)
         col = selected_col;
 
-    split(rect, from_left(BPM_WIDTH, 0), &left, &right);
-    draw_bpm_field(surface, &left, record->bpm, col);
+    if (st_display_bpm == true){
+    	split(rect, from_left(BPM_WIDTH, 0), &left, &right);
+    	draw_bpm_field(surface, &left, record->bpm, col);
+    }else{
+        right = rect;
+    }
 
     split(right, from_left(SPACER, 0), &left, &right);
     draw_rect(surface, &left, col);
@@ -1960,10 +1965,11 @@ static int parse_geometry(const char *s)
  * error
  */
 
-int interface_start(struct library *lib, const char *geo, bool decor, bool display_art, bool display_new_cols)
+int interface_start(struct library *lib, const char *geo, bool decor, bool display_bpm, bool display_art, bool display_new_cols)
 {
     size_t n;
     st_display_art = display_art;
+    st_display_bpm = display_bpm;
     st_display_new_cols = display_new_cols;
 
     if (parse_geometry(geo) == -1) {
